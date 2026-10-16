@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Appointment &mdash; Patient Portal | Apex City Care Hospital</title>
+  <meta name="description" content="Track your OPD appointment, estimated wait time, doctor details, and hospital directions in real-time." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .patient-hero {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0ea5e9 100%);
+      color: white; border-radius: 20px; padding: 2rem 2.5rem;
+      margin-bottom: 2rem; position: relative; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(6,95,70,0.3);
+    }
+    .patient-hero::before {
+      content:''; position:absolute; top:-40px; right:-40px;
+      width:200px; height:200px; background:rgba(255,255,255,0.07); border-radius:50%;
+    }
+    .appt-card {
+      background:#fff; border:2px solid #d1fae5; border-radius:18px;
+      padding:1.75rem; box-shadow:0 4px 20px rgba(16,185,129,0.1);
+      position:relative; overflow:hidden; margin-bottom:1.25rem;
+    }
+    .appt-card::before {
+      content:''; position:absolute; top:0; left:0; width:5px; height:100%;
+      background:linear-gradient(180deg,#10b981,#0ea5e9); border-radius:4px 0 0 4px;
+    }
+    .eta-box {
+      background:linear-gradient(135deg,#1e293b,#0f172a); color:white;
+      border-radius:16px; padding:1.5rem; text-align:center;
+      box-shadow:0 8px 24px rgba(0,0,0,0.2); margin-bottom:1.25rem;
+    }
+    .eta-num {
+      font-family:'Poppins',monospace; font-size:3.5rem; font-weight:900; letter-spacing:2px;
+      background:linear-gradient(135deg,#10b981,#0ea5e9);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .doc-card {
+      background:linear-gradient(135deg,#f0fdf4,#ecfdf5);
+      border:1.5px solid #a7f3d0; border-radius:16px; padding:1.5rem;
+    }
+    .doc-avatar {
+      width:60px; height:60px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.6rem; color:white; flex-shrink:0;
+    }
+    .todo-row {
+      background:#fff; border:1.5px solid #e2e8f0; border-radius:12px;
+      padding:0.9rem 1rem; display:flex; align-items:center; gap:12px;
+      transition:all 0.2s; cursor:pointer; margin-bottom:8px;
+    }
+    .todo-row:hover { border-color:#10b981; box-shadow:0 2px 10px rgba(16,185,129,0.12); transform:translateX(4px); }
+    .todo-row.done .todo-txt { text-decoration:line-through; color:#94a3b8; }
+    .t-check {
+      width:22px; height:22px; border:2px solid #cbd5e1; border-radius:6px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .todo-row.done .t-check { background:#10b981; border-color:#10b981; color:white; }
+    .doc-dir-card {
+      background:#fff; border:1.5px solid #e2e8f0; border-radius:14px;
+      padding:1.1rem 1.25rem; transition:all 0.2s; cursor:pointer;
+    }
+    .doc-dir-card:hover { border-color:#10b981; box-shadow:0 4px 16px rgba(16,185,129,0.12); transform:translateY(-2px); }
+    .addr-card {
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      border:1.5px solid #bfdbfe; border-radius:16px; padding:1.5rem; margin-bottom:1.25rem;
+    }
+    .pulse { width:10px; height:10px; border-radius:50%; background:#10b981; display:inline-block; animation:pd 1.5s infinite; }
+    @keyframes pd { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.4);opacity:0.7;} }
+    .sec-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .sec-ttl { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:#0f172a; }
+    .plus-btn {
+      width:32px; height:32px; background:linear-gradient(135deg,#10b981,#0ea5e9);
+      border:none; border-radius:8px; color:white; font-size:1.1rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+      box-shadow:0 2px 8px rgba(16,185,129,0.3);
+    }
+    .plus-btn:hover { transform:scale(1.1); }
+    .modal-bg {
+      position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
+      z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem;
+    }
+    .modal-bg.on { display:flex; }
+    .modal-box {
+      background:white; border-radius:20px; padding:2rem; max-width:480px; width:100%;
+      box-shadow:0 24px 60px rgba(0,0,0,0.2); animation:su 0.3s ease;
+    }
+    @keyframes su { from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+    .smini { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-bottom:1.75rem; }
+    .sm { background:linear-gradient(135deg,#f8fafc,#f1f5f9); border:1px solid #e2e8f0; border-radius:12px; padding:0.85rem; text-align:center; }
+    .sm-v { font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:800; }
+    .sm-l { font-size:0.7rem; color:#64748b; margin-top:2px; font-weight:600; }
+    .main2 { display:grid; grid-template-columns:1.1fr 1fr; gap:1.75rem; margin-bottom:1.75rem; }
+    .todo2 { display:grid; grid-template-columns:1fr 1fr; gap:1.75rem; margin-bottom:1.75rem; }
+    @media(max-width:768px) { .main2,.todo2 { grid-template-columns:1fr; } .smini { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <header class="navbar"></header>
+
+  <main class="container" style="padding-top:2rem;padding-bottom:3rem;">
+    <!-- Hero -->
+    <div class="patient-hero">
+      <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:6px;">
+            <span class="pulse"></span>&nbsp;LIVE OPD TRACKING
+          </div>
+          <h1 style="font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:900;margin:0 0 6px;">
+            Welcome, <span id="hName">Patient</span>! &#x1F44B;
+          </h1>
+          <p style="font-size:0.9rem;color:rgba(255,255,255,0.8);margin:0;">Your appointment is confirmed. Track your queue position in real-time.</p>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+            <button class="btn btn-mint btn-sm" onclick="oBook()" style="font-weight:800;padding:8px 16px;box-shadow:0 4px 12px rgba(16,185,129,0.3);background:#10b981;color:#fff;border-radius:8px;">
+              <i class="fas fa-plus-circle"></i> Create Patient / Book Appointment
+            </button>
+            <button class="btn btn-sm" onclick="oLocModal()" style="font-weight:700;padding:8px 14px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:8px;">
+              <i class="fas fa-map-marked-alt"></i> Exact Location & Hospital Radar
+            </button>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin-bottom:4px;">TOKEN</div>
+          <div id="hToken" style="font-family:'Poppins',sans-serif;font-size:2rem;font-weight:900;background:rgba(255,255,255,0.15);padding:8px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">MED-101</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="smini">
+      <div class="sm"><div class="sm-v" style="color:#10b981;" id="sQ">--</div><div class="sm-l">Queue Position</div></div>
+      <div class="sm"><div class="sm-v" style="color:#0ea5e9;" id="sW">--</div><div class="sm-l">Est. Wait (mins)</div></div>
+      <div class="sm"><div class="sm-v" style="color:#f59e0b;" id="sT">--</div><div class="sm-l">Travel Time (mins)</div></div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main2">
+      <!-- LEFT -->
+      <div>
+        <div class="appt-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:0.72rem;font-weight:700;color:#64748b;letter-spacing:0.8px;margin-bottom:4px;">MY APPOINTMENT</div>
+              <h2 id="aDoc" style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">Dr. Sarah Mehta, MD</h2>
+              <div id="aSpec" style="font-size:0.82rem;color:#475569;margin-top:3px;">Cardiology</div>
+            </div>
+            <span id="aStatus" class="badge badge-green" style="font-size:0.8rem;"><i class="fas fa-circle" style="font-size:0.55rem;"></i> QUEUED</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;"><div style="font-size:0.68rem;font-weight:700;color:#94a3b8;margin-bottom:3px;">SLOT TIME</div><div id="aTime" style="font-weight:800;color:#0f172a;font-size:0.95rem;">10:30 AM</div></div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;"><div style="font-size:0.68rem;font-weight:700;color:#94a3b8;margin-bottom:3px;">ROOM</div><div id="aRoom" style="font-weight:800;color:#0f172a;font-size:0.95rem;">Room 101</div></div>
+            <div style="background:#f8fafc;border:1.5px dashed #3b82f6;border-radius:10px;padding:0.75rem;cursor:pointer;" onclick="oLocModal()" title="Click to view exact location & landmark details">
+              <div style="font-size:0.68rem;font-weight:700;color:#2563eb;margin-bottom:3px;"><i class="fas fa-map-pin"></i> EXACT LOCATION</div>
+              <div id="aLoc" style="font-weight:700;color:#0f172a;font-size:0.82rem;">Connaught Place</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;"><div style="font-size:0.68rem;font-weight:700;color:#94a3b8;margin-bottom:3px;">DISTANCE</div><div id="aDist" style="font-weight:800;color:#0f172a;font-size:0.95rem;">2.8 km</div></div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:0.85rem;margin-bottom:1rem;">
+            <div style="font-size:0.7rem;font-weight:700;color:#065f46;margin-bottom:4px;"><i class="fas fa-notes-medical"></i> CHIEF COMPLAINT</div>
+            <div id="aComplaint" style="font-size:0.88rem;font-weight:600;color:#1e293b;">General OPD Consultation</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-mint btn-sm" onclick="oBook()" style="flex:1;background:#10b981;color:white;font-weight:700;"><i class="fas fa-plus"></i> New Pass</button>
+            <button class="btn btn-success btn-sm" onclick="oDelay()"><i class="fas fa-traffic-light"></i> Delay</button>
+            <button class="btn btn-outline-primary btn-sm" onclick="vQR()"><i class="fas fa-qrcode"></i> QR</button>
+            <button class="btn btn-primary btn-sm" onclick="oLocModal()" style="flex:1;"><i class="fas fa-map-marker-alt"></i> Exact Radar</button>
+          </div>
+        </div>
+
+        <div class="doc-card">
+          <div style="font-size:0.72rem;font-weight:700;color:#065f46;letter-spacing:0.8px;margin-bottom:0.75rem;"><i class="fas fa-user-md"></i> YOUR CONSULTING DOCTOR</div>
+          <div style="display:flex;gap:1rem;align-items:flex-start;">
+            <div id="dAv" class="doc-avatar" style="background:linear-gradient(135deg,#10b981,#065f46);"><i class="fas fa-stethoscope"></i></div>
+            <div style="flex:1;">
+              <div id="dName" style="font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:800;color:#0f172a;">Dr. Sarah Mehta, MD</div>
+              <div id="dQual" style="font-size:0.8rem;color:#475569;margin-top:2px;">MD (Cardiology AIIMS)</div>
+              <div id="dSpec" style="font-size:0.78rem;color:#10b981;font-weight:700;margin-top:4px;">Cardiology</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="background:#fff;border:1px solid #a7f3d0;border-radius:6px;padding:3px 8px;font-size:0.73rem;font-weight:600;color:#065f46;"><i class="fas fa-clock"></i> <span id="dTim">09:00-01:30</span></span>
+                <span style="background:#fff;border:1px solid #a7f3d0;border-radius:6px;padding:3px 8px;font-size:0.73rem;font-weight:600;color:#065f46;"><i class="fas fa-star" style="color:#f59e0b;"></i> <span id="dRat">4.9</span></span>
+                <span style="background:#fff;border:1px solid #a7f3d0;border-radius:6px;padding:3px 8px;font-size:0.73rem;font-weight:600;color:#065f46;"><i class="fas fa-briefcase-medical"></i> <span id="dExp">16</span> Yrs</span>
+              </div>
+              <div style="margin-top:6px;font-size:0.78rem;color:#64748b;"><i class="fas fa-phone" style="color:#10b981;"></i> <span id="dPh">+91 11 2659 0101</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="eta-box">
+          <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-bottom:8px;"><span class="pulse"></span>&nbsp;ESTIMATED WAIT TIME</div>
+          <div class="eta-num" id="etaN">--</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-bottom:1rem;">minutes remaining</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center;"><div style="color:rgba(255,255,255,0.6);font-size:0.68rem;font-weight:700;margin-bottom:2px;">CALL TIME</div><div id="etaC" style="font-weight:800;color:#10b981;">--</div></div>
+            <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center;"><div style="color:rgba(255,255,255,0.6);font-size:0.68rem;font-weight:700;margin-bottom:2px;">DEPART BY</div><div id="etaD" style="font-weight:800;color:#f59e0b;">--</div></div>
+          </div>
+          <div style="margin-top:1rem;background:rgba(255,255,255,0.06);border-radius:10px;padding:0.75rem;">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:6px;">TRAVEL MODE OPTIONS:</div>
+            <div id="tGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>
+          </div>
+        </div>
+
+        <div class="addr-card">
+          <div style="font-size:0.72rem;font-weight:700;color:#1d4ed8;letter-spacing:0.8px;margin-bottom:0.75rem;"><i class="fas fa-hospital-alt"></i> HOSPITAL ADDRESS</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:0.95rem;font-weight:700;color:#1e293b;margin-bottom:4px;">Apex City Care Super-Specialty Hospital</div>
+          <div style="font-size:0.82rem;color:#475569;line-height:1.5;margin-bottom:0.75rem;"><i class="fas fa-map-marker-alt" style="color:#ef4444;"></i> Health Boulevard, Ring Road, Sector 12, New Delhi - 110029</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:0.78rem;margin-bottom:0.75rem;">
+            <span style="background:#fff;border:1px solid #bfdbfe;border-radius:6px;padding:3px 10px;font-weight:600;color:#1d4ed8;"><i class="fas fa-phone-alt"></i> +91 11 2659 0001</span>
+            <span style="background:#fff;border:1px solid #fecdd3;border-radius:6px;padding:3px 10px;font-weight:600;color:#be123c;"><i class="fas fa-ambulance"></i> Emergency: 2659 8888</span>
+          </div>
+          <button class="btn btn-sm" style="background:#1d4ed8;color:white;width:100%;border-radius:8px;" onclick="window.open('https://maps.google.com/?q=Health+Boulevard+Ring+Road+Sector+12+New+Delhi','_blank')">
+            <i class="fas fa-directions"></i> Get Directions
+          </button>
+        </div>
+
+        <div id="emBox" style="display:none;background:linear-gradient(135deg,#7f1d1d,#991b1b);color:white;border-radius:12px;padding:1rem;">
+          <div style="display:flex;align-items:center;gap:10px;"><i class="fas fa-exclamation-triangle" style="font-size:1.4rem;color:#fef08a;"></i><div><strong>Emergency Delay Active</strong><div id="emTxt" style="font-size:0.78rem;color:#fecdd3;margin-top:2px;">OPD queue delayed</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Todo Grid -->
+    <div class="todo2">
+      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;padding:1.5rem;">
+        <div class="sec-hdr">
+          <div class="sec-ttl"><i class="fas fa-stethoscope" style="color:#10b981;"></i> Doctor Meetings</div>
+          <button class="plus-btn" onclick="oMeet()" title="Add meeting">+</button>
+        </div>
+        <div id="meetList"></div>
+      </div>
+      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;padding:1.5rem;">
+        <div class="sec-hdr">
+          <div class="sec-ttl"><i class="fas fa-tasks" style="color:#8b5cf6;"></i> My To-Do List</div>
+          <button class="plus-btn" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);" onclick="oTask()" title="Add task">+</button>
+        </div>
+        <div id="taskList"></div>
+      </div>
+    </div>
+
+    <!-- Doctors Directory -->
+    <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:18px;padding:1.5rem;">
+      <div class="sec-hdr">
+        <div class="sec-ttl"><i class="fas fa-user-md" style="color:#0ea5e9;"></i> Hospital Doctors Directory</div>
+        <button class="plus-btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);" onclick="location.href='registration.html'" title="Book appointment"><i class="fas fa-calendar-plus" style="font-size:0.85rem;"></i></button>
+      </div>
+      <div id="docGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.85rem;"></div>
+    </div>
+  </main>
+
+  <!-- Delay Modal -->
+  <div class="modal-bg" id="mDelay">
+    <div class="modal-box">
+      <h3 style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:#0f172a;margin-bottom:4px;"><i class="fas fa-traffic-light" style="color:#f59e0b;"></i> Report Travel Delay</h3>
+      <p style="font-size:0.83rem;color:#64748b;margin-bottom:1.25rem;">Running late? Let the hospital know so they can adjust your queue position.</p>
+      <div class="form-group"><label class="form-label">Delay Amount:</label>
+        <select id="dMin" class="form-input"><option value="5">+5 mins</option><option value="10" selected>+10 mins</option><option value="15">+15 mins</option><option value="20">+20 mins</option><option value="30">+30 mins (Major Delay)</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Reason:</label>
+        <select id="dRea" class="form-input"><option>Traffic jam</option><option>Vehicle breakdown</option><option>Unable to find parking</option><option>Started late</option><option>Auto / cab delay</option></select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="cM('mDelay')" style="flex:1;">Cancel</button>
+        <button class="btn btn-warning btn-sm" onclick="subDelay()" style="flex:1;"><i class="fas fa-paper-plane"></i> Report Delay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Meeting Modal -->
+  <div class="modal-bg" id="mMeet">
+    <div class="modal-box">
+      <h3 style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:#0f172a;margin-bottom:1rem;"><i class="fas fa-plus-circle" style="color:#10b981;"></i> Add Doctor Meeting</h3>
+      <div class="form-group"><label class="form-label">Doctor / Department:</label><input id="mDoc" type="text" class="form-input" placeholder="e.g. Dr. Sarah Mehta - Cardiology" /></div>
+      <div class="form-group"><label class="form-label">Scheduled Time:</label><input id="mTime" type="time" class="form-input" /></div>
+      <div class="form-group"><label class="form-label">Notes:</label><input id="mNotes" type="text" class="form-input" placeholder="e.g. Bring ECG report..." /></div>
+      <div style="display:flex;gap:8px;margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="cM('mMeet')" style="flex:1;">Cancel</button>
+        <button class="btn btn-success btn-sm" onclick="addMeet()" style="flex:1;"><i class="fas fa-check"></i> Add Meeting</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-bg" id="mTask">
+    <div class="modal-box">
+      <h3 style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:#0f172a;margin-bottom:1rem;"><i class="fas fa-plus-circle" style="color:#8b5cf6;"></i> Add Task / Reminder</h3>
+      <div class="form-group"><label class="form-label">Task Description:</label><input id="tTxt" type="text" class="form-input" placeholder="e.g. Collect lab reports, Buy medicine..." /></div>
+      <div class="form-group"><label class="form-label">Priority:</label>
+        <select id="tPri" class="form-input"><option value="normal">Normal</option><option value="urgent">Urgent</option><option value="low">Low</option></select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="cM('mTask')" style="flex:1;">Cancel</button>
+        <button onclick="addTask()" style="flex:1;background:#8b5cf6;color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;font-weight:700;"><i class="fas fa-check"></i> Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       CREATE PATIENT / BOOK APPOINTMENT MODAL (mBookAppt)
+       ========================================================================== -->
+  <div class="modal-bg" id="mBookAppt">
+    <div class="modal-box" style="max-width:560px; max-height:90vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem;">
+        <div>
+          <h3 style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:800; color:#0f172a; margin:0;">
+            <i class="fas fa-calendar-plus" style="color:#10b981;"></i> Book OPD Appointment
+          </h3>
+          <span style="font-size:0.75rem; color:#64748b;">Instant token allocation & realistic transit time synchronization</span>
+        </div>
+        <button onclick="cM('mBookAppt')" style="background:none; border:none; color:#94a3b8; font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <form id="formCreatePatient" onsubmit="submitCreatePatient(event)">
+        <!-- Patient Details -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.75rem;">Patient Full Name:</label>
+            <input type="text" id="bName" class="form-input" placeholder="e.g. Rahul Verma" required />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.75rem;">Phone Number (WhatsApp):</label>
+            <input type="tel" id="bPhone" class="form-input" placeholder="+91 98111 22334" required />
+          </div>
+        </div>
+
+        <!-- Doctor & Slot Selection -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.75rem;">Consulting Doctor (10 Doctors):</label>
+            <select id="bDoctorSelect" class="form-input" onchange="onBookDoctorChange()" required></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.75rem;">Available OPD Slot:</label>
+            <select id="bSlotSelect" class="form-input" required></select>
+          </div>
+        </div>
+
+        <!-- Exact Landmark Location Picker & GPS -->
+        <div class="form-group" style="margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label class="form-label" style="font-size:0.75rem; margin:0;">
+              <i class="fas fa-map-marker-alt" style="color:#ef4444;"></i> Exact Patient Starting Location:
+            </label>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="detectLiveGpsLocation()" style="padding:2px 8px; font-size:0.7rem; border-radius:6px;">
+              <i class="fas fa-crosshairs"></i> Auto-Detect Device GPS
+            </button>
+          </div>
+          <select id="bLocationSelect" class="form-input" onchange="onBookLocationChange()"></select>
+          <div id="bExactAddressBox" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; margin-top:6px; font-size:0.75rem; color:#475569; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div id="bAddressText" style="font-weight:600; color:#1e293b;">Connaught Place Inner Circle, Block B, New Delhi</div>
+              <div id="bCoordsText" style="font-size:0.7rem; color:#94a3b8; font-family:monospace;">28.6315° N, 77.2167° E • Approx 2.8 km away</div>
+            </div>
+            <span id="bDistBadge" class="badge badge-peach" style="font-size:0.75rem; font-weight:800;">2.8 km</span>
+          </div>
+        </div>
+
+        <!-- Travel Mode -->
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label" style="font-size:0.75rem;">Travel Mode to Apex Hospital:</label>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+            <button type="button" class="btn btn-sm b-mode-btn" id="bMode_WALK" onclick="setBookTransitMode('WALK')" style="padding:6px; font-size:0.75rem; border:1.5px solid #cbd5e1; background:#fff; border-radius:8px;">
+              <i class="fas fa-walking"></i> Walk<br/><span style="font-size:0.65rem; color:#64748b;" id="bTimeWalk">--</span>
+            </button>
+            <button type="button" class="btn btn-sm b-mode-btn active" id="bMode_TWO_WHEELER" onclick="setBookTransitMode('TWO_WHEELER')" style="padding:6px; font-size:0.75rem; border:1.5px solid #10b981; background:#ecfdf5; color:#065f46; font-weight:700; border-radius:8px;">
+              <i class="fas fa-motorcycle"></i> Bike<br/><span style="font-size:0.65rem;" id="bTimeBike">--</span>
+            </button>
+            <button type="button" class="btn btn-sm b-mode-btn" id="bMode_CAR" onclick="setBookTransitMode('CAR')" style="padding:6px; font-size:0.75rem; border:1.5px solid #cbd5e1; background:#fff; border-radius:8px;">
+              <i class="fas fa-car"></i> Car/Cab<br/><span style="font-size:0.65rem; color:#64748b;" id="bTimeCar">--</span>
+            </button>
+            <button type="button" class="btn btn-sm b-mode-btn" id="bMode_METRO" onclick="setBookTransitMode('METRO')" style="padding:6px; font-size:0.75rem; border:1.5px solid #cbd5e1; background:#fff; border-radius:8px;">
+              <i class="fas fa-subway"></i> Metro<br/><span style="font-size:0.65rem; color:#64748b;" id="bTimeMetro">--</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Complaint -->
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label" style="font-size:0.75rem;">Chief Medical Complaint:</label>
+          <input type="text" id="bComplaint" class="form-input" placeholder="e.g. Chest pain, High Blood Pressure, Knee pain..." required />
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="cM('mBookAppt')" style="flex:1;">Cancel</button>
+          <button type="submit" class="btn btn-mint btn-sm" style="flex:2; padding:10px; font-weight:800; background:#10b981; color:#fff; border-radius:8px;">
+            <i class="fas fa-check-circle"></i> Issue Token & Confirm Appointment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       EXACT LOCATION & RADAR MODAL (mLocationRadar)
+       ========================================================================== -->
+  <div class="modal-bg" id="mLocationRadar">
+    <div class="modal-box" style="max-width:620px; max-height:92vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; border-bottom:2px solid #e2e8f0; padding-bottom:0.75rem;">
+        <div>
+          <h3 style="font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:800; color:#0f172a; margin:0;">
+            <i class="fas fa-satellite-dish" style="color:#0ea5e9;"></i> Exact Location & Navigation Radar
+          </h3>
+          <span style="font-size:0.75rem; color:#64748b;">GPS coordinates, real-time landmark routing and traffic calculations</span>
+        </div>
+        <button onclick="cM('mLocationRadar')" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <!-- Hospital Exact Destination -->
+      <div style="background:linear-gradient(135deg, #1e3a8a, #1e40af); color:#fff; border-radius:14px; padding:1.25rem; margin-bottom:1rem; box-shadow:0 6px 18px rgba(30,58,138,0.25);">
+        <div style="display:flex; align-items:center; gap:8px; font-size:0.75rem; font-weight:800; color:#93c5fd; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">
+          <i class="fas fa-hospital-alt"></i> Exact Destination Hospital
+        </div>
+        <div style="font-size:1.1rem; font-weight:900; margin-bottom:4px;">Apex City Care Super-Specialty Hospital</div>
+        <div style="font-size:0.83rem; color:#e0e7ff; line-height:1.5;">
+          <i class="fas fa-map-marker-alt" style="color:#f87171;"></i> Health Boulevard, Ring Road, Sector 12, Metro Junction, New Delhi - 110029
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; font-size:0.75rem; color:#bfdbfe;">
+          <span><i class="fas fa-compass"></i> Coordinates: <strong>28.5672° N, 77.2100° E</strong></span>
+          <span>•</span>
+          <span><i class="fas fa-landmark"></i> Landmark: <strong>Opposite Metro Pillar 142</strong></span>
+        </div>
+      </div>
+
+      <!-- Patient Current Exact Location -->
+      <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:14px; padding:1.2rem; margin-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.6px;">
+            <i class="fas fa-user-circle" style="color:#10b981;"></i> Patient Starting Location:
+          </span>
+          <button class="btn btn-outline-primary btn-sm" onclick="detectLiveGpsLocation(true)" style="padding:2px 8px; font-size:0.72rem; border-radius:6px;">
+            <i class="fas fa-crosshairs"></i> Refresh GPS
+          </button>
+        </div>
+        <div style="font-size:1rem; font-weight:800; color:#0f172a; margin-bottom:4px;" id="locModalTitle">Connaught Place Inner Circle</div>
+        <div style="font-size:0.82rem; color:#64748b; line-height:1.5;" id="locModalAddress">Block B, Radial Road 2, Near Rajiv Chowk Metro Gate 5, New Delhi</div>
+        
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px;">
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; text-align:center;">
+            <div style="font-size:0.68rem; color:#94a3b8; font-weight:700;">DISTANCE</div>
+            <div id="locModalDist" style="font-size:1.15rem; font-weight:900; color:#2563eb;">2.8 km</div>
+          </div>
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; text-align:center;">
+            <div style="font-size:0.68rem; color:#94a3b8; font-weight:700;">TRANSIT TIME</div>
+            <div id="locModalTime" style="font-size:1.15rem; font-weight:900; color:#10b981;">8 mins</div>
+          </div>
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; text-align:center;">
+            <div style="font-size:0.68rem; color:#94a3b8; font-weight:700;">GPS ACCURACY</div>
+            <div id="locModalAccuracy" style="font-size:1.15rem; font-weight:900; color:#0ea5e9;">± 8m</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Radar Transit Map Canvas Simulation -->
+      <div style="background:#0f172a; border-radius:14px; padding:1.25rem; color:#fff; margin-bottom:1.25rem; position:relative; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.75rem;">
+          <span style="color:#38bdf8; font-weight:700;"><span class="pulse"></span> LIVE SATELLITE DISPATCH RADAR</span>
+          <span style="color:#94a3b8; font-family:monospace;" id="radarCoords">28.5672° N • 77.2100° E</span>
+        </div>
+
+        <div style="height:110px; border:1px dashed rgba(255,255,255,0.2); border-radius:10px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:relative; background:radial-gradient(circle at center, rgba(14,165,233,0.15) 0%, transparent 70%);">
+          <!-- Patient Point -->
+          <div style="text-align:center; z-index:2;">
+            <div style="width:36px; height:36px; border-radius:50%; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 4px; box-shadow:0 0 15px #10b981;">
+              <i class="fas fa-user"></i>
+            </div>
+            <div style="font-size:0.7rem; font-weight:700; color:#a7f3d0;" id="radarPatientLabel">You (Patient)</div>
+          </div>
+
+          <!-- Connecting Pulsing Route Line -->
+          <div style="flex:1; height:3px; background:linear-gradient(90deg, #10b981, #0ea5e9, #3b82f6); margin:0 15px; position:relative; border-radius:3px;">
+            <div style="position:absolute; top:-6px; left:45%; width:15px; height:15px; border-radius:50%; background:#38bdf8; box-shadow:0 0 12px #38bdf8; animation:pd 1.5s infinite;"></div>
+          </div>
+
+          <!-- Hospital Destination -->
+          <div style="text-align:center; z-index:2;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 4px; box-shadow:0 0 20px #2563eb;">
+              <i class="fas fa-hospital-alt"></i>
+            </div>
+            <div style="font-size:0.7rem; font-weight:700; color:#93c5fd;">Apex Hospital</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.72rem; color:#94a3b8;">
+          <span>Traffic Status: <strong style="color:#34d399;">Moderate Flow (Ring Road)</strong></span>
+          <span>Departure Buffer: <strong style="color:#fde047;">On Schedule</strong></span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="cM('mLocationRadar')" style="flex:1;">Close</button>
+        <button class="btn btn-primary btn-sm" onclick="openExactGoogleMaps()" style="flex:2; padding:10px; font-weight:800; border-radius:8px; background:#1d4ed8;">
+          <i class="fas fa-directions"></i> Open Turn-by-Turn in Google Maps
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="formal-footer"></footer>
+  <script src="assets/js/engine.js"></script>
+  <script>
+    var cu=null, tok=null, doc=null;
+    var meets = JSON.parse(localStorage.getItem('ql_p_meets')||'null') || [
+      {id:1,doc:'Dr. Sarah Mehta - Cardiology OPD',time:'10:30 AM',notes:'Bring ECG report',done:false},
+      {id:2,doc:'Follow-up Review - Dr. Mehta',time:'02:00 PM',notes:'Stress test results discussion',done:false},
+      {id:3,doc:'Radiology - Echocardiography',time:'12:00 PM',notes:'Room 201, need referral slip',done:false}
+    ];
+    var tasks = JSON.parse(localStorage.getItem('ql_p_tasks')||'null') || [
+      {id:1,txt:'Collect blood test reports from Lab Counter',pri:'urgent',done:false},
+      {id:2,txt:'Submit OPD registration form at Desk 1',pri:'normal',done:false},
+      {id:3,txt:'Buy prescription medicines from pharmacy',pri:'normal',done:false},
+      {id:4,txt:'Schedule follow-up appointment in 2 weeks',pri:'low',done:false},
+      {id:5,txt:'Get insurance pre-authorization form signed',pri:'urgent',done:false}
+    ];
+
+    function cM(id){document.getElementById(id).classList.remove('on');}
+    function oM(id){document.getElementById(id).classList.add('on');}
+    function oDelay(){oM('mDelay');} function oMeet(){oM('mMeet');} function oTask(){oM('mTask');}
+
+    document.addEventListener('DOMContentLoaded',function(){
+      initQueueStorage();
+      cu = enforceRoleAccess(['VISITOR','DOCTOR','STAFF','ADMIN']);
+      if(!cu) return;
+      renderUniversalNavAuth();
+      renderUniversalHospitalNav('patient-portal');
+      renderDynamicFooter();
+      load(); rMeets(); rTasks(); rDocs();
+      setInterval(load, 30000);
+    });
+
+    function load(){
+      try{
+        var tokens=getTokens(), docs=getDoctors(), state=getHospitalState(), dq=getDynamicHospitalQueue();
+        tok = tokens.find(function(t){return t.tokenNumber===cu.tokenNumber;}) || tokens.find(function(t){return t.email===cu.email;}) || tokens[0];
+        if(!tok) return;
+        doc = docs.find(function(d){return d.id===tok.doctorId;}) || docs[0];
+
+        g('hName').textContent = (cu.name||tok.userName||'Patient').split(' ')[0];
+        g('hToken').textContent = tok.tokenNumber||'MED-101';
+        g('aDoc').textContent = tok.doctorName||doc.name;
+        g('aSpec').textContent = doc.specialty;
+        g('aTime').textContent = tok.slotTime||'10:30 AM';
+        g('aRoom').textContent = 'Room '+(tok.roomNo||doc.roomNo||'101');
+        g('aLoc').textContent = (tok.userLocation||cu.userLocation||'Your Location').split(',')[0];
+        g('aDist').textContent = (tok.distanceKm||cu.distanceKm||2.8)+' km';
+        g('aComplaint').textContent = tok.chiefComplaint||cu.chiefComplaint||'General OPD Consultation';
+
+        var sb=g('aStatus');
+        if(tok.status==='IN_SERVICE'){sb.className='badge badge-purple';sb.innerHTML='<i class="fas fa-circle" style="font-size:0.55rem;"></i> IN CONSULTATION';}
+        else if(tok.status==='COMPLETED'){sb.className='badge badge-blue';sb.innerHTML='<i class="fas fa-check-circle" style="font-size:0.55rem;"></i> COMPLETED';}
+        else{sb.className='badge badge-green';sb.innerHTML='<i class="fas fa-circle" style="font-size:0.55rem;"></i> QUEUED';}
+
+        g('dName').textContent=doc.name; g('dQual').textContent=doc.qualification||'';
+        g('dSpec').textContent=doc.specialty; g('dTim').textContent=doc.opdTimings||'';
+        g('dRat').textContent=doc.rating||'4.9'; g('dExp').textContent=doc.experienceYrs||'10';
+        g('dPh').textContent=doc.phone||''; if(doc.avatarBg) g('dAv').style.background=doc.avatarBg;
+
+        var qe=dq.find(function(q){return q.tokenNumber===tok.tokenNumber;});
+        var wm=qe?qe.estWaitMinutes:0, ct=qe?qe.estimatedCallTime:'--', dt=qe?qe.recommendedDepartureTime:'--', qi=qe?qe.queueIndex:'--';
+        g('sQ').textContent=tok.status==='IN_SERVICE'?'NOW':(qi||'--');
+        g('sW').textContent=tok.status==='IN_SERVICE'?'0':(wm||'0');
+        g('etaN').textContent=tok.status==='IN_SERVICE'?'0':(wm||'0');
+        g('etaC').textContent=tok.status==='IN_SERVICE'?'Now!':(ct||'--');
+        g('etaD').textContent=tok.status==='IN_SERVICE'?'Now!':(dt||'--');
+
+        var dist=parseFloat(tok.distanceKm||cu.distanceKm||2.8), tr=calculateDetailedTransitTimes(dist);
+        g('sT').textContent=tr.twoWheeler.min;
+        g('tGrid').innerHTML=[{icon:'fa-walking',lbl:'Walk',m:tr.walk},{icon:'fa-motorcycle',lbl:'Bike',m:tr.twoWheeler},{icon:'fa-car',lbl:'Car',m:tr.fourWheeler},{icon:'fa-bolt',lbl:'E-Bike',m:tr.eBike}]
+          .map(function(x){return '<div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;cursor:pointer;"><i class="fas '+x.icon+'" style="color:#10b981;font-size:1rem;"></i><div style="font-size:0.62rem;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:700;">'+x.lbl+'</div><div style="font-size:0.68rem;color:#fff;font-weight:800;">'+x.m.min+'m</div></div>';}).join('');
+
+        if(state.emergencyActive){g('emBox').style.display='block';g('emTxt').textContent=(state.emergencyReason||'Emergency')+' in progress. Queue delayed by +'+(state.emergencyDelayMins||12)+' mins.';}
+        else g('emBox').style.display='none';
+      }catch(e){console.warn('load err',e);}
+    }
+
+    function g(id){return document.getElementById(id);}
+
+    function rMeets(){
+      var el=g('meetList'); if(!el)return;
+      if(!meets.length){el.innerHTML='<div style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:1rem;">No meetings. Tap <b>+</b> to add.</div>';return;}
+      el.innerHTML=meets.map(function(m){return '<div class="todo-row '+(m.done?'done':'')+'" onclick="togM('+m.id+')"><div class="t-check">'+(m.done?'<i class="fas fa-check" style="font-size:0.7rem;"></i>':'')+' </div><div style="flex:1;min-width:0;"><div class="todo-txt" style="font-size:0.85rem;font-weight:700;color:#1e293b;">'+m.doc+'</div><div style="font-size:0.75rem;color:#64748b;margin-top:2px;"><i class="fas fa-clock" style="color:#10b981;"></i> '+m.time+(m.notes?' &bull; '+m.notes:'')+'</div></div><button onclick="event.stopPropagation();delM('+m.id+')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;"><i class="fas fa-times"></i></button></div>';}).join('');
+    }
+
+    function rTasks(){
+      var el=g('taskList'); if(!el)return;
+      if(!tasks.length){el.innerHTML='<div style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:1rem;">No tasks. Tap <b>+</b> to add.</div>';return;}
+      var pc={urgent:'#ef4444',normal:'#10b981',low:'#94a3b8'};
+      el.innerHTML=tasks.map(function(t){return '<div class="todo-row '+(t.done?'done':'')+'" onclick="togT('+t.id+')"><div class="t-check">'+(t.done?'<i class="fas fa-check" style="font-size:0.7rem;"></i>':'')+' </div><div style="flex:1;min-width:0;"><div class="todo-txt" style="font-size:0.85rem;font-weight:700;color:#1e293b;">'+t.txt+'</div><span style="font-size:0.68rem;font-weight:700;color:'+(pc[t.pri]||'#94a3b8')+';text-transform:uppercase;">'+t.pri+'</span></div><button onclick="event.stopPropagation();delT('+t.id+')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;"><i class="fas fa-times"></i></button></div>';}).join('');
+    }
+
+    function rDocs(){
+      try{
+        var ds=getDoctors(), el=g('docGrid'); if(!el||!ds) return;
+        el.innerHTML=ds.map(function(d){return '<div class="doc-dir-card"><div style="display:flex;align-items:center;gap:10px;"><div style="width:42px;height:42px;border-radius:50%;background:'+(d.avatarBg||'#10b981')+';color:white;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;"><i class="fas '+(d.icon||'fa-user-md')+'"></i></div><div style="flex:1;min-width:0;"><div style="font-weight:800;color:#0f172a;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+d.name+'</div><div style="font-size:0.75rem;color:#475569;">'+d.specialty+'</div><div style="font-size:0.72rem;color:#64748b;margin-top:2px;"><i class="fas fa-door-open" style="color:#10b981;"></i> '+(d.room||d.roomNo||'OPD')+' &bull; <i class="fas fa-star" style="color:#f59e0b;"></i> '+(d.rating||'4.8')+'</div></div><button class="btn btn-primary btn-sm" onclick="oBook(\''+d.id+'\')" style="padding:4px 8px;font-size:0.72rem;white-space:nowrap;">Book</button></div><div style="margin-top:8px;font-size:0.72rem;color:#94a3b8;background:#f8fafc;border-radius:6px;padding:4px 8px;"><i class="fas fa-clock"></i> '+(d.opdTimings||'09:00-01:30 PM')+' &bull; <span style="color:#10b981;font-weight:700;">'+(d.freeSlots&&d.freeSlots.length?d.freeSlots.length:'Available')+' slots</span></div></div>';}).join('');
+      }catch(e){console.warn('rDocs err',e);}
+    }
+
+    /* ==========================================================================
+       EXACT LOCATIONS DATASET & REAL-TIME GPS NAVIGATION RADAR
+       ========================================================================== */
+    var DELHI_LOCATIONS = [
+      { id: 'loc-aiims', name: 'AIIMS Campus Gate 2, Ansari Nagar, New Delhi', landmark: 'Ansari Nagar, Ring Road', dist: 1.2, lat: 28.5672, lng: 77.2100 },
+      { id: 'loc-cp', name: 'Connaught Place Inner Circle, Block B, New Delhi', landmark: 'Radial Road 2, Near Rajiv Chowk Gate 5', dist: 2.8, lat: 28.6315, lng: 77.2167 },
+      { id: 'loc-southex', name: 'South Extension Part 1 Market, Ring Road, New Delhi', landmark: 'Near Bengalee Sweets, South Ext.', dist: 3.4, lat: 28.5729, lng: 77.2228 },
+      { id: 'loc-defcol', name: 'Defence Colony Flyover / Ring Road, New Delhi', landmark: 'Opposite Defence Colony Club Road', dist: 3.7, lat: 28.5733, lng: 77.2346 },
+      { id: 'loc-lajpat', name: 'Lajpat Nagar Central Market, 2nd Cross, New Delhi', landmark: 'Near 3C Movie Mall & Metro', dist: 4.1, lat: 28.5684, lng: 77.2435 },
+      { id: 'loc-karolbagh', name: 'Karol Bagh Metro Station, Pusa Road, New Delhi', landmark: 'Gate 2, Pusa Road Junction', dist: 5.8, lat: 28.6434, lng: 77.1887 },
+      { id: 'loc-vasant', name: 'Vasant Kunj B-Block Pocket 2, South West Delhi', landmark: 'Near Fortis Hospital & DPS', dist: 6.4, lat: 28.5284, lng: 77.1541 },
+      { id: 'loc-saket', name: 'Saket Select Citywalk Mall, Press Enclave Road, New Delhi', landmark: 'District Centre Saket', dist: 7.2, lat: 28.5285, lng: 77.2185 },
+      { id: 'loc-noida', name: 'Noida Sector 62 Electronic City, Gautam Buddha Nagar', landmark: 'Near Fortis Hospital Noida Sector 62', dist: 8.5, lat: 28.6280, lng: 77.3649 },
+      { id: 'loc-gurgaon', name: 'Cyber City DLF Phase 2, Rapid Metro, Gurugram', landmark: 'Building 10 Tower B, DLF Cyber City', dist: 16.5, lat: 28.4906, lng: 77.0888 }
+    ];
+
+    var currentBookMode = 'TWO_WHEELER';
+    var currentBookLoc = DELHI_LOCATIONS[1];
+
+    function oBook(docId) {
+      populateBookDoctorSelect(docId);
+      initBookLocations();
+      if (cu) {
+        if (g('bName') && !g('bName').value) g('bName').value = cu.name || '';
+        if (g('bPhone') && !g('bPhone').value) g('bPhone').value = cu.phone || cu.userPhone || '+91 98110 54321';
+      }
+      oM('mBookAppt');
+    }
+
+    function populateBookDoctorSelect(selectedDocId) {
+      try {
+        var ds = getDoctors();
+        var sel = g('bDoctorSelect');
+        if (!sel || !ds || !ds.length) return;
+        sel.innerHTML = ds.map(function(d) {
+          var isMatch = selectedDocId && (d.id === selectedDocId || d.id === 'doc-' + selectedDocId || ('doc-' + d.id) === selectedDocId);
+          return '<option value="' + d.id + '"' + (isMatch ? ' selected' : '') + '>' +
+            d.name + ' (' + d.specialty + ') — Room ' + (d.room || d.roomNo || 'OPD') +
+          '</option>';
+        }).join('');
+        onBookDoctorChange();
+      } catch (e) { console.warn('populateBookDoctorSelect err', e); }
+    }
+
+    function onBookDoctorChange() {
+      try {
+        var ds = getDoctors();
+        var docId = g('bDoctorSelect').value;
+        var doc = ds.find(function(d) { return d.id === docId; }) || ds[0];
+        var slotSel = g('bSlotSelect');
+        if (!slotSel || !doc) return;
+        var slots = (doc.freeSlots && doc.freeSlots.length) ? doc.freeSlots : ['09:30 AM', '10:00 AM', '10:30 AM', '11:15 AM', '12:00 PM', '02:30 PM'];
+        slotSel.innerHTML = slots.map(function(s) {
+          return '<option value="' + s + '">' + s + ' (Available Slot)</option>';
+        }).join('');
+      } catch (e) { console.warn('onBookDoctorChange err', e); }
+    }
+
+    function initBookLocations() {
+      var sel = g('bLocationSelect');
+      if (!sel) return;
+      sel.innerHTML = DELHI_LOCATIONS.map(function(loc, idx) {
+        return '<option value="' + loc.id + '"' + (idx === 1 ? ' selected' : '') + '>' +
+          loc.name + ' (' + loc.dist + ' km away)' +
+        '</option>';
+      }).join('');
+      onBookLocationChange();
+    }
+
+    function onBookLocationChange() {
+      var sel = g('bLocationSelect');
+      if (!sel) return;
+      var loc = DELHI_LOCATIONS.find(function(l) { return l.id === sel.value; }) || DELHI_LOCATIONS[1];
+      currentBookLoc = loc;
+      updateLocationDetails(loc);
+    }
+
+    function updateLocationDetails(loc) {
+      if (g('bAddressText')) g('bAddressText').textContent = loc.name;
+      if (g('bCoordsText')) g('bCoordsText').textContent = (loc.lat ? loc.lat.toFixed(4) : '28.6315') + '° N, ' + (loc.lng ? loc.lng.toFixed(4) : '77.2167') + '° E • ' + loc.landmark + ' (' + loc.dist + ' km away)';
+      if (g('bDistBadge')) g('bDistBadge').textContent = loc.dist + ' km';
+
+      var tr = calculateDetailedTransitTimes(loc.dist);
+      if (g('bTimeWalk')) g('bTimeWalk').textContent = tr.walk.durationMins + 'm';
+      if (g('bTimeBike')) g('bTimeBike').textContent = tr.twoWheeler.durationMins + 'm';
+      if (g('bTimeCar')) g('bTimeCar').textContent = tr.fourWheeler.durationMins + 'm';
+      if (g('bTimeMetro')) g('bTimeMetro').textContent = Math.round(tr.fourWheeler.durationMins * 0.85 + 3) + 'm';
+    }
+
+    function setBookTransitMode(mode) {
+      currentBookMode = mode;
+      document.querySelectorAll('.b-mode-btn').forEach(function(b) {
+        b.style.border = '1.5px solid #cbd5e1';
+        b.style.background = '#fff';
+        b.style.color = '#334155';
+        b.classList.remove('active');
+      });
+      var activeBtn = g('bMode_' + mode);
+      if (activeBtn) {
+        activeBtn.style.border = '1.5px solid #10b981';
+        activeBtn.style.background = '#ecfdf5';
+        activeBtn.style.color = '#065f46';
+        activeBtn.classList.add('active');
+      }
+    }
+
+    function detectLiveGpsLocation(forRadar) {
+      showToast('Acquiring real-time GPS satellite signal...', 'info');
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          var lat = pos.coords.latitude;
+          var lng = pos.coords.longitude;
+          var dLat = (28.5672 - lat) * Math.PI / 180;
+          var dLng = (77.2100 - lng) * Math.PI / 180;
+          var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat * Math.PI / 180) * Math.cos(28.5672 * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+          var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          var exactDist = Math.max(0.5, Math.round(6371 * c * 10) / 10);
+
+          var liveLoc = {
+            id: 'loc-live-gps',
+            name: 'Device Exact GPS Position (' + lat.toFixed(4) + '° N, ' + lng.toFixed(4) + '° E)',
+            landmark: 'Live GPS Satellite Fix',
+            dist: exactDist,
+            lat: lat,
+            lng: lng
+          };
+
+          currentBookLoc = liveLoc;
+          updateLocationDetails(liveLoc);
+          if (forRadar) updateRadarModalContent(liveLoc);
+          showToast('GPS Satellite Locked! Exact distance: ' + exactDist + ' km', 'success');
+        }, function(err) {
+          var nearest = DELHI_LOCATIONS[0];
+          currentBookLoc = nearest;
+          updateLocationDetails(nearest);
+          if (forRadar) updateRadarModalContent(nearest);
+          showToast('GPS Calibrated: Locked to ' + nearest.name.split(',')[0] + ' (' + nearest.dist + ' km)', 'success');
+        }, { timeout: 6000, enableHighAccuracy: true });
+      } else {
+        var def = DELHI_LOCATIONS[1];
+        updateLocationDetails(def);
+        if (forRadar) updateRadarModalContent(def);
+        showToast('Location calibrated: ' + def.name.split(',')[0], 'info');
+      }
+    }
+
+    function submitCreatePatient(e) {
+      if (e) e.preventDefault();
+      var name = (g('bName').value || '').trim();
+      var phone = (g('bPhone').value || '').trim();
+      var docId = g('bDoctorSelect').value;
+      var slot = g('bSlotSelect').value;
+      var complaint = (g('bComplaint').value || '').trim() || 'General OPD Consultation';
+
+      if (!name) { showToast('Please enter patient name', 'warning'); return; }
+      if (!phone) { showToast('Please enter patient contact number', 'warning'); return; }
+
+      try {
+        var loc = currentBookLoc || DELHI_LOCATIONS[1];
+        var booking = bookPatientAppointment({
+          patientName: name,
+          phone: phone,
+          email: cu ? (cu.email || '') : '',
+          doctorId: docId,
+          distanceKm: loc.dist,
+          transitMode: currentBookMode,
+          chosenSlot: slot,
+          complaint: complaint,
+          userLocation: loc.name
+        });
+
+        if (booking && booking.token) {
+          if (cu) {
+            cu.name = name;
+            cu.phone = phone;
+            cu.tokenNumber = booking.token.tokenNumber;
+            cu.distanceKm = loc.dist;
+            cu.transitMode = currentBookMode;
+            cu.chiefComplaint = complaint;
+            cu.userLocation = loc.name;
+            localStorage.setItem('ql_current_user', JSON.stringify(cu));
+          }
+
+          meets.unshift({
+            id: Date.now(),
+            doc: booking.token.doctorName + ' — OPD ' + (booking.token.roomNo || '101'),
+            time: slot,
+            notes: complaint,
+            done: false
+          });
+          svM();
+          rMeets();
+
+          cM('mBookAppt');
+          load();
+          showToast('Patient Token #' + booking.token.tokenNumber + ' created successfully! Appointment confirmed.', 'success');
+        } else {
+          showToast('Error creating appointment token', 'error');
+        }
+      } catch (err) {
+        console.error('submitCreatePatient err', err);
+        showToast('Booking failed: ' + err.message, 'error');
+      }
+    }
+
+    function oLocModal() {
+      var curLoc = currentBookLoc;
+      if (tok && tok.userLocation) {
+        var match = DELHI_LOCATIONS.find(function(l) { return tok.userLocation.indexOf(l.name.split(',')[0]) !== -1; });
+        if (match) curLoc = match;
+        else curLoc = {
+          name: tok.userLocation,
+          landmark: 'Selected Starting Point',
+          dist: parseFloat(tok.distanceKm || 2.8),
+          lat: 28.6315,
+          lng: 77.2167
+        };
+      }
+      updateRadarModalContent(curLoc || DELHI_LOCATIONS[1]);
+      oM('mLocationRadar');
+    }
+
+    function updateRadarModalContent(loc) {
+      if (g('locModalTitle')) g('locModalTitle').textContent = loc.name.split(',')[0];
+      if (g('locModalAddress')) g('locModalAddress').textContent = loc.name + ' • Landmark: ' + loc.landmark;
+      if (g('locModalDist')) g('locModalDist').textContent = loc.dist + ' km';
+      var tr = calculateDetailedTransitTimes(loc.dist);
+      var travelMin = (currentBookMode === 'WALK') ? tr.walk.durationMins :
+                      (currentBookMode === 'CAR') ? tr.fourWheeler.durationMins :
+                      tr.twoWheeler.durationMins;
+      if (g('locModalTime')) g('locModalTime').textContent = travelMin + ' mins';
+      if (g('locModalAccuracy')) g('locModalAccuracy').textContent = '± 6m';
+      if (g('radarCoords')) g('radarCoords').textContent = (loc.lat ? loc.lat.toFixed(4) : '28.6315') + '° N • ' + (loc.lng ? loc.lng.toFixed(4) : '77.2167') + '° E';
+      if (g('radarPatientLabel')) g('radarPatientLabel').textContent = loc.name.split(',')[0];
+    }
+
+    function openExactGoogleMaps() {
+      var loc = currentBookLoc || DELHI_LOCATIONS[1];
+      var dest = '28.5672,77.2100';
+      var origin = (loc.lat && loc.lng) ? (loc.lat + ',' + loc.lng) : encodeURIComponent(loc.name);
+      var url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin + '&destination=' + dest + '&travelmode=driving';
+      window.open(url, '_blank');
+    }
+
+    function togM(id){var m=meets.find(function(x){return x.id===id;});if(m){m.done=!m.done;svM();rMeets();}}
+    function delM(id){meets=meets.filter(function(x){return x.id!==id;});svM();rMeets();showToast('Meeting removed','info');}
+    function svM(){localStorage.setItem('ql_p_meets',JSON.stringify(meets));}
+    function addMeet(){
+      var d=g('mDoc').value.trim(); if(!d){showToast('Enter doctor name','warning');return;}
+      meets.push({id:Date.now(),doc:d,time:g('mTime').value||'TBD',notes:g('mNotes').value.trim(),done:false});
+      svM();rMeets();cM('mMeet');g('mDoc').value='';g('mTime').value='';g('mNotes').value='';showToast('Meeting added!','success');
+    }
+
+    function togT(id){var t=tasks.find(function(x){return x.id===id;});if(t){t.done=!t.done;svT();rTasks();}}
+    function delT(id){tasks=tasks.filter(function(x){return x.id!==id;});svT();rTasks();showToast('Task removed','info');}
+    function svT(){localStorage.setItem('ql_p_tasks',JSON.stringify(tasks));}
+    function addTask(){
+      var t=g('tTxt').value.trim(); if(!t){showToast('Enter task description','warning');return;}
+      tasks.push({id:Date.now(),txt:t,pri:g('tPri').value,done:false});
+      svT();rTasks();cM('mTask');g('tTxt').value='';showToast('Task added!','success');
+    }
+
+    function subDelay(){
+      var mins=parseInt(g('dMin').value);
+      try{if(tok)reportClientTransitDelay(tok.tokenNumber,mins);}catch(e){}
+      showToast('Delay of +'+mins+' mins reported. Queue adjusted!','success');
+      cM('mDelay'); load();
+    }
+
+    function vQR(){try{if(tok)viewPatientAppointmentQR(tok.tokenNumber);}catch(e){}}
+
+    document.querySelectorAll('.modal-bg').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('on');});});
+  </script>
+</body>
+</html>

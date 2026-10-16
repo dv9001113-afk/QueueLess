@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>QueueLess — iOS App Launcher & WebClip Installer</title>
+
+  <!-- iOS Standalone WebClip Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="QueueLess" />
+  <meta name="theme-color" content="#4F8FCB" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <style>
+    body {
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .installer-card {
+      max-width: 480px;
+      width: 100%;
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      border: 1.5px solid var(--border-light);
+    }
+    .ios-step-box {
+      background: var(--bg-sidebar);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: left;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="installer-card">
+    <div style="width:72px; height:72px; border-radius:20px; background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem; box-shadow:0 8px 25px rgba(79, 143, 203, 0.35);">
+      <i class="fas fa-layer-group"></i>
+    </div>
+
+    <span class="badge badge-purple" style="margin-bottom:0.75rem;"><i class="fab fa-apple"></i> iOS WebClip App Ready</span>
+    <h1 style="font-family:'Poppins',sans-serif; font-size:1.75rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">
+      QueueLess for iPhone & iPad
+    </h1>
+    <p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.75rem;">
+      Run QueueLess in standalone full-screen mode on iOS with zero Safari navigation bars.
+    </p>
+
+    <a href="../../mobile-app.html" class="btn btn-primary btn-lg w-100" style="margin-bottom:10px;">
+      <i class="fas fa-play"></i> Open Mobile App Now
+    </a>
+
+    <!-- Step by Step Visual Guide for iOS Safari -->
+    <div class="ios-step-box">
+      <strong style="color:var(--text-primary); display:block; margin-bottom:6px; font-size:0.9rem;">
+        <i class="fab fa-safari" style="color:var(--primary);"></i> How to Add to iPhone Home Screen:
+      </strong>
+      1. Open this page or <a href="../../mobile-app.html" style="color:var(--primary); font-weight:600;">mobile-app.html</a> in <strong>Safari</strong>.<br />
+      2. Tap the <strong>Share button</strong> at the bottom <span style="font-size:1.1rem;">⎋</span> (rectangle with an arrow pointing up).<br />
+      3. Scroll down and tap <strong>"Add to Home Screen" <i class="fas fa-plus-square"></i></strong>.<br />
+      4. Tap <strong>"Add"</strong> at top-right.<br />
+      5. The <strong>QueueLess</strong> icon is now on your iOS Home Screen like a native App Store app!
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Apex City Care Hospital (QueueLess)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - 160px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+    .auth-card {
+      max-width: 520px;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1.75rem;
+      background: var(--bg-sidebar);
+      padding: 6px;
+      border-radius: var(--radius-md);
+    }
+    .role-tab {
+      padding: 10px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: var(--transition-fast);
+      border: 1px solid transparent;
+    }
+    .role-tab.active {
+      background: #FFFFFF;
+      color: var(--primary-dark);
+      border-color: var(--border-light);
+      box-shadow: var(--shadow-xs);
+    }
+    .quick-pill-btn {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .quick-pill-btn:hover {
+      background: var(--primary-soft);
+      border-color: var(--primary-light);
+      color: var(--primary-dark);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hospital Navbar -->
+  <header class="navbar"></header>
+
+  <div class="auth-wrapper">
+    <div class="auth-card soft-glass-card">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div class="float-element" style="width:54px; height:54px; border-radius:14px; background:linear-gradient(135deg, #10B981, #0EA5E9); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 0.75rem; box-shadow:0 6px 18px rgba(16,185,129,0.25);">
+          <i class="fas fa-hospital-user"></i>
+        </div>
+        <h1 style="font-family:'Poppins',sans-serif; font-size:1.55rem; font-weight:800; color:var(--text-primary); margin-bottom:4px;">
+          Apex Hospital <span class="animated-gradient-text">OPD Sign In</span>
+        </h1>
+        <p style="font-size:0.85rem; color:var(--text-secondary);" id="authSubtitle">
+          Select your portal role: Head Doctor, Floor Staff, or Patient
+        </p>
+      </div>
+
+      <!-- 3-Role Tab Selector: Doctor, Staff, Patient -->
+      <div class="role-tabs">
+        <div class="role-tab active" id="tabDoctor" onclick="selectRoleTab('DOCTOR')">
+          <i class="fas fa-stethoscope" style="display:block; font-size:1.1rem; margin-bottom:4px; color:#8b5cf6;"></i>
+          Head Doctor
+        </div>
+        <div class="role-tab" id="tabStaff" onclick="selectRoleTab('STAFF')">
+          <i class="fas fa-user-nurse" style="display:block; font-size:1.1rem; margin-bottom:4px; color:#0ea5e9;"></i>
+          Floor Staff
+        </div>
+        <div class="role-tab" id="tabPatient" onclick="selectRoleTab('VISITOR')">
+          <i class="fas fa-user-injured" style="display:block; font-size:1.1rem; margin-bottom:4px; color:#10b981;"></i>
+          Patient / Client
+        </div>
+      </div>
+
+      <!-- Active Role Indicator -->
+      <div id="loginTargetBadge" style="text-align:center; margin-bottom:1rem;">
+        <span class="badge badge-purple" style="font-size:0.8rem; padding:4px 12px;">
+          <i class="fas fa-stethoscope"></i> Target Portal: Doctor Clinical Console (Dr. Sarah Mehta)
+        </span>
+      </div>
+
+      <!-- Quick Demo Auto-Fill Badges -->
+      <div style="margin-bottom:1.25rem; background:var(--bg-main); border-radius:var(--radius-md); padding:0.85rem; border:1px solid var(--border-light);">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
+          <i class="fas fa-key" style="color:var(--primary);"></i> DEMO HOSPITAL CREDENTIALS:
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;" id="demoAutoFillSlots">
+          <!-- Dynamically populated based on selected tab -->
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginFormSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Email Address:</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="doctor@queueless.com" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password:</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" id="loginSubmitBtn" style="padding:12px; font-size:0.95rem; margin-top:0.5rem;">
+          <i class="fas fa-sign-in-alt"></i> Sign In to Assigned Portal
+        </button>
+      </form>
+
+      <!-- 1-Click Instant Portal Launchers -->
+      <div style="margin-top:1.5rem; padding-top:1.25rem; border-top:1px dashed var(--border); text-align:center;">
+        <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
+          ⚡ Or 1-Click Direct Portal Access:
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+          <button type="button" class="btn btn-purple btn-sm" onclick="quickDirectLogin('DOCTOR')" title="Open Doctor Console">
+            <i class="fas fa-stethoscope"></i> Doctor Desk
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="quickDirectLogin('STAFF')" title="Open Staff Calling Desk">
+            <i class="fas fa-user-nurse"></i> Staff Desk
+          </button>
+          <button type="button" class="btn btn-mint btn-sm" onclick="quickDirectLogin('VISITOR')" title="Open Patient Tracker">
+            <i class="fas fa-mobile-alt"></i> Patient App
+          </button>
+        </div>
+      </div>
+
+      <!-- Developer Discreet Portal Link -->
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.78rem; color:var(--text-muted);">
+        Hospital System Programmer? 
+        <a href="dev-database-admin.html" onclick="quickDirectLogin('ADMIN'); return false;" style="color:#64748b; font-weight:600; text-decoration:underline;">
+          Access Database Admin Console
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="formal-footer"></footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    let activeRoleTab = 'DOCTOR';
+
+    function selectRoleTab(role) {
+      activeRoleTab = role;
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      const badgeIndicator = document.getElementById('loginTargetBadge');
+
+      if (role === 'DOCTOR') {
+        document.getElementById('tabDoctor').classList.add('active');
+        fillCreds('doctor@queueless.com', 'doctor123', false);
+        if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-stethoscope"></i> Sign In to Doctor Console';
+        if (badgeIndicator) {
+          badgeIndicator.innerHTML = '<span class="badge badge-purple" style="font-size:0.8rem; padding:4px 12px;"><i class="fas fa-stethoscope"></i> Target Portal: Doctor Clinical Console (Dr. Sarah Mehta)</span>';
+        }
+      } else if (role === 'STAFF') {
+        document.getElementById('tabStaff').classList.add('active');
+        fillCreds('staff@queueless.com', 'staff123', false);
+        if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-user-nurse"></i> Sign In to Staff Calling Desk';
+        if (badgeIndicator) {
+          badgeIndicator.innerHTML = '<span class="badge badge-blue" style="font-size:0.8rem; padding:4px 12px;"><i class="fas fa-user-nurse"></i> Target Portal: Floor Staff Calling Desk (Sister Priya Nair)</span>';
+        }
+      } else if (role === 'VISITOR') {
+        document.getElementById('tabPatient').classList.add('active');
+        fillCreds('patient@queueless.com', 'patient123', false);
+        if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-mobile-alt"></i> Sign In to Patient Tracker';
+        if (badgeIndicator) {
+          badgeIndicator.innerHTML = '<span class="badge badge-green" style="font-size:0.8rem; padding:4px 12px;"><i class="fas fa-user-injured"></i> Target Portal: Patient OPD Tracker (Aarav Sharma)</span>';
+        }
+      }
+
+      renderAutoFillPills();
+    }
+
+    function renderAutoFillPills() {
+      const container = document.getElementById('demoAutoFillSlots');
+      if (activeRoleTab === 'DOCTOR') {
+        container.innerHTML = `
+          <button type="button" class="quick-pill-btn" onclick="fillCreds('doctor@queueless.com', 'doctor123')">
+            <i class="fas fa-user-md" style="color:#8b5cf6;"></i> Dr. Sarah Mehta, MD (Chief Consultant)
+          </button>
+        `;
+      } else if (activeRoleTab === 'STAFF') {
+        container.innerHTML = `
+          <button type="button" class="quick-pill-btn" onclick="fillCreds('staff@queueless.com', 'staff123')">
+            <i class="fas fa-user-nurse" style="color:#0ea5e9;"></i> Sister Priya Nair (Calling Desk 1)
+          </button>
+          <button type="button" class="quick-pill-btn" onclick="fillCreds('rajesh.staff@queueless.com', 'staff123')">
+            <i class="fas fa-id-badge" style="color:#10b981;"></i> Rajesh Sharma (Desk 2 Registrar)
+          </button>
+        `;
+      } else {
+        container.innerHTML = `
+          <button type="button" class="quick-pill-btn" onclick="fillCreds('patient@queueless.com', 'patient123')">
+            <i class="fas fa-user" style="color:#10b981;"></i> Aarav Sharma (Cardiology Patient)
+          </button>
+          <button type="button" class="quick-pill-btn" onclick="fillCreds('user@gmail.com', 'user123')">
+            <i class="fas fa-user" style="color:#0ea5e9;"></i> user@gmail.com (Patient Login)
+          </button>
+        `;
+      }
+    }
+
+    function fillCreds(email, pass, showToastMsg = true) {
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = pass;
+
+      if (email.includes('doctor')) {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tabDoctor').classList.add('active');
+        activeRoleTab = 'DOCTOR';
+      } else if (email.includes('staff')) {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tabStaff').classList.add('active');
+        activeRoleTab = 'STAFF';
+      } else {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tabPatient').classList.add('active');
+        activeRoleTab = 'VISITOR';
+      }
+
+      if (showToastMsg) {
+        showToast(`Credentials filled for ${email}`, 'info');
+      }
+    }
+
+    function handleLoginFormSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+
+      const result = loginUser(email, pass);
+      if (result.success) {
+        const dest = getPortalRedirectForRole(result.user.role);
+        showToast(`Welcome, ${result.user.name}! Opening your portal...`, 'success');
+        setTimeout(() => {
+          window.location.href = dest;
+        }, 400);
+      } else {
+        showToast(result.message, 'error');
+      }
+    }
+
+    function quickDirectLogin(role) {
+      if (role === 'DOCTOR') {
+        const res = loginUser('doctor@queueless.com', 'doctor123');
+        if (res.success) {
+          showToast('Opening Head Doctor Console (Dr. Sarah Mehta)...', 'success');
+          setTimeout(() => { window.location.href = 'doctor-portal.html'; }, 300);
+        }
+      } else if (role === 'STAFF') {
+        const res = loginUser('staff@queueless.com', 'staff123');
+        if (res.success) {
+          showToast('Opening Floor Staff Calling Desk (Sister Priya Nair)...', 'success');
+          setTimeout(() => { window.location.href = 'staff-dashboard.html'; }, 300);
+        }
+      } else if (role === 'ADMIN') {
+        const res = loginUser('admin@univ.edu', 'admin123');
+        if (res.success) {
+          showToast('Opening Developer DB Admin Console...', 'info');
+          setTimeout(() => { window.location.href = 'dev-database-admin.html'; }, 300);
+        }
+      } else {
+        const res = loginUser('patient@queueless.com', 'patient123');
+        if (res.success) {
+          showToast('Opening Patient OPD Tracker (Aarav Sharma)...', 'success');
+          setTimeout(() => { window.location.href = 'mobile-app.html'; }, 300);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = (params.get('role') || '').toUpperCase();
+      if (roleParam === 'STAFF') {
+        selectRoleTab('STAFF');
+      } else if (roleParam === 'VISITOR' || roleParam === 'PATIENT') {
+        selectRoleTab('VISITOR');
+      } else {
+        selectRoleTab('DOCTOR');
+      }
+
+      renderUniversalHospitalNav();
+      renderDynamicFooter();
+    });
+  </script>
+</body>
+</html>

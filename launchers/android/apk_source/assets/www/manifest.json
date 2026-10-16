@@ -1,0 +1,24 @@
+{
+  "name": "QueueLess — Virtual Queue & Appointment App",
+  "short_name": "QueueLess",
+  "description": "Deterministic virtual queue management and appointment scheduling with 2:1 allocation and live proximity alerts.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFD",
+  "theme_color": "#4F8FCB",
+  "icons": [
+    {
+      "src": "./assets/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

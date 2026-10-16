@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient OPD Suite & Travel Tracker — Apex City Care Hospital</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .alarm-departure-card {
+      background: linear-gradient(135deg, #065f46, #047857);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 20px rgba(6, 95, 70, 0.25);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .traffic-delay-box {
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .transit-mode-btn {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .transit-mode-btn.active {
+      border-color: #10b981;
+      background: #ecfdf5;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+    .emergency-patient-notice {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      color: #9f1239;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: pulseAlert 2s infinite;
+    }
+    @keyframes pulseAlert {
+      0% { opacity: 1; }
+      50% { opacity: 0.75; }
+      100% { opacity: 1; }
+    }
+    .doctor-card-item {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: var(--transition-fast);
+    }
+    .doctor-card-item:hover {
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
+    }
+    .staff-card-item {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .qr-badge-btn {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      color: #334155;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+    .qr-badge-btn:hover {
+      background: #10b981;
+      border-color: #10b981;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Hospital Navbar -->
+  <header class="navbar"></header>
+
+  <main class="section" style="padding: 1.5rem 0 3.5rem;">
+    <div class="container">
+
+      <!-- Top Patient Identity & Switcher Bar -->
+      <div style="background:#ffffff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;" class="soft-glass-card">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+            <i class="fas fa-hospital-user"></i>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.5px;">
+              <span class="pulse-dot"></span> Active Patient Session
+            </div>
+            <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin:0;" id="topPatientName">
+              Aarav Sharma
+            </h2>
+            <div style="font-size:0.78rem; color:#64748b;" id="topPatientSubtitle">
+              Pass #MED-101 • Cardiology OPD • Distance: 2.8 km
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 Patient Switcher Dropdown -->
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="text-align:right;">
+            <label style="font-size:0.7rem; font-weight:700; color:#64748b; display:block;">Switch Hospital Patient (10 Entries):</label>
+            <select id="selectActivePatient" class="form-input" style="padding:6px 12px; font-size:0.8rem; background:#fff; font-weight:600;" onchange="handlePatientSwitcherChange()">
+              <!-- Populated dynamically with 10 Patients -->
+            </select>
+          </div>
+          <button class="btn btn-outline-primary btn-sm" onclick="triggerMyPassQR()">
+            <i class="fas fa-qrcode"></i> My QR Pass
+          </button>
+        </div>
+      </div>
+
+      <!-- App Tabs Header Navigation -->
+      <div class="app-tabs-header soft-glass-card">
+        <button class="app-tab-btn active" id="tabBtnPass" onclick="switchAppTab('pass')">
+          <i class="fas fa-ticket-alt"></i> My Active Pass & Tracker
+        </button>
+        <button class="app-tab-btn" id="tabBtnBook" onclick="switchAppTab('book')">
+          <i class="fas fa-calendar-plus"></i> Book Appointment (10 Doctors)
+        </button>
+        <button class="app-tab-btn" id="tabBtnDoctors" onclick="switchAppTab('doctors')">
+          <i class="fas fa-user-md"></i> Doctors Directory (10 Specialists)
+        </button>
+        <button class="app-tab-btn" id="tabBtnStaff" onclick="switchAppTab('staff')">
+          <i class="fas fa-id-badge"></i> Floor Staff Desks (10 Members)
+        </button>
+        <button class="app-tab-btn" id="tabBtnAllPatients" onclick="switchAppTab('allPatients')">
+          <i class="fas fa-users"></i> OPD Queue Roster (10 Patients)
+        </button>
+      </div>
+
+      <!-- Emergency Alert Notice (Dynamically visible when doctor declares emergency) -->
+      <div id="patientEmergencyNotice" style="display:none;" class="emergency-patient-notice">
+        <i class="fas fa-ambulance" style="font-size:2rem; color:#e11d48;"></i>
+        <div style="font-size:0.85rem; line-height:1.4;">
+          <strong style="font-size:0.95rem; color:#881337; display:block;">HOSPITAL EMERGENCY OVERRIDE ACTIVE (+12 MINS)</strong>
+          Dr. Sarah Mehta has declared a critical cardiac emergency case. Routine OPD appointments are postponed by <strong>12 minutes</strong>. Your recommended departure alarm has been adjusted automatically!
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 1: MY ACTIVE PASS & LIVE QUEUE TRACKER -->
+      <!-- =================================================================== -->
+      <div id="sectionTabPass" class="tab-pane active fade-in-up">
+        <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.5rem;">
+
+          <!-- Left Column: Active Token Ticket & Live Turn Metrics -->
+          <div>
+            <div class="token-ticket soft-glass-card" style="margin-bottom:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge badge-purple" id="clientServiceBadge">CARDIOLOGY OPD PASS</span>
+                <span class="badge badge-green" id="clientTokenStatusBadge">QUEUED</span>
+              </div>
+
+              <div class="token-big-num animated-gradient-text" id="clientTokenNumDisplay" style="margin:0.5rem 0;">MED-101</div>
+
+              <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:2px;" id="clientHospitalServiceName">
+                Cardiology & Heart Health OPD
+              </h3>
+              <p style="font-size:0.825rem; color:var(--text-muted); margin-bottom:12px;" id="clientDoctorDetailText">
+                Room 101 • Dr. Sarah Mehta, MD (Avg. Consultation: 10 mins)
+              </p>
+
+              <!-- Live Metrics Grid -->
+              <div class="grid-3" style="gap:10px; margin-top:0.75rem; text-align:center;">
+                <div style="background:var(--bg-sidebar); padding:10px; border-radius:var(--radius-sm);">
+                  <div style="font-size:1.4rem; font-weight:800; color:var(--primary);" id="clientAheadCount">0</div>
+                  <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">Patients Ahead</div>
+                </div>
+
+                <div style="background:var(--bg-sidebar); padding:10px; border-radius:var(--radius-sm);">
+                  <div style="font-size:1.4rem; font-weight:800; color:#10b981;" id="clientEstWaitMins">0 mins</div>
+                  <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">Est. Wait Time</div>
+                </div>
+
+                <div style="background:var(--bg-sidebar); padding:10px; border-radius:var(--radius-sm);">
+                  <div style="font-size:1.4rem; font-weight:800; color:#8b5cf6;" id="clientEstimatedCallTime">10:45 AM</div>
+                  <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">Estimated Call</div>
+                </div>
+              </div>
+
+              <!-- Quick QR View Button on Ticket -->
+              <div style="margin-top:1.25rem;">
+                <button class="btn btn-primary btn-block btn-soft-glow" onclick="triggerMyPassQR()">
+                  <i class="fas fa-qrcode"></i> View Digital Scannable QR Appointment Pass
+                </button>
+              </div>
+            </div>
+
+            <!-- Client Traffic Delay Alert Reporter -->
+            <div class="traffic-delay-box">
+              <div>
+                <div style="font-size:0.875rem; font-weight:700; color:#9a3412;">
+                  <i class="fas fa-traffic-light"></i> Stuck in Traffic or Running Late?
+                </div>
+                <div style="font-size:0.78rem; color:#7c2d12;">
+                  Notify floor staff so they call the next ready patient first without cancelling your turn!
+                </div>
+              </div>
+              <button class="btn btn-peach btn-sm" onclick="handleReportTrafficDelay()" style="font-weight:700;">
+                <i class="fas fa-hourglass-half"></i> Report +10m Traffic Delay
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Departure Alarm & Live Travel Matrix -->
+          <div>
+            <!-- Departure Alarm Banner -->
+            <div class="alarm-departure-card">
+              <div>
+                <div style="font-size:0.75rem; font-weight:700; color:#a7f3d0; text-transform:uppercase; letter-spacing:0.5px;">
+                  <i class="fas fa-bell"></i> RECOMMENDED DEPARTURE ALARM
+                </div>
+                <div style="font-size:2.2rem; font-weight:800; font-family:'Poppins',sans-serif;" id="alarmDepartureTime">
+                  10:35 AM
+                </div>
+                <div style="font-size:0.8rem; color:#d1fae5; line-height:1.4;" id="alarmSubtext">
+                  Depart now to reach Hospital OPD just as your turn is called!
+                </div>
+              </div>
+              <div style="font-size:2.8rem; opacity:0.85;">
+                <i class="fas fa-clock float-element"></i>
+              </div>
+            </div>
+
+            <!-- Transit Mode & Distance Calculator -->
+            <div style="background:#ffffff; border:1.5px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.25rem;" class="soft-glass-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-size:0.875rem; font-weight:700; color:var(--text-primary);">
+                  <i class="fas fa-route" style="color:var(--primary);"></i> Travel Mode to Apex Hospital
+                </div>
+                <span class="badge badge-mint" style="font-size:0.7rem;" id="badgeTransitDist">2.8 km</span>
+              </div>
+
+              <!-- Distance Location Selector -->
+              <div style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; font-weight:700; color:#475569; display:block; margin-bottom:4px;">
+                  Your Live Location (Recalculates Travel Time):
+                </label>
+                <select id="selectClientLocation" class="form-input" style="padding:8px; font-size:0.825rem; background:#fff;" onchange="handleLocationChange()">
+                  <option value="1.2|South Extension, South Zone">South Extension (1.2 km away)</option>
+                  <option value="2.8|Connaught Place, Central Zone" selected>Connaught Place (2.8 km away)</option>
+                  <option value="4.5|Karol Bagh, West Zone">Karol Bagh (4.5 km away)</option>
+                  <option value="6.4|Vasant Kunj, South West">Vasant Kunj (6.4 km away)</option>
+                  <option value="8.5|Noida Sector 62, East Zone">Noida Sector 62 (8.5 km away)</option>
+                  <option value="12.0|Gurugram Cyber City">Gurugram Cyber City (12.0 km away)</option>
+                  <option value="0.4|Hospital Campus Guest Wing">Hospital Campus Wing (0.4 km away)</option>
+                </select>
+              </div>
+
+              <!-- 5 Transit Mode Options -->
+              <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; font-size:0.7rem;">
+                <div class="transit-mode-btn" id="modeWalk" onclick="setTransitMode('WALK')">
+                  <i class="fas fa-walking" style="font-size:1.15rem; color:#10b981;"></i>
+                  <div style="font-weight:700;" id="timeWalk">28m</div>
+                  <div style="font-size:0.6rem; color:var(--text-muted);">Walk</div>
+                </div>
+
+                <div class="transit-mode-btn" id="modeCycle" onclick="setTransitMode('CYCLE')">
+                  <i class="fas fa-bicycle" style="font-size:1.15rem; color:#0ea5e9;"></i>
+                  <div style="font-weight:700;" id="timeCycle">14m</div>
+                  <div style="font-size:0.6rem; color:var(--text-muted);">Cycle</div>
+                </div>
+
+                <div class="transit-mode-btn" id="modeEbike" onclick="setTransitMode('EBIKE')">
+                  <i class="fas fa-bolt" style="font-size:1.15rem; color:#8b5cf6;"></i>
+                  <div style="font-weight:700;" id="timeEbike">7m</div>
+                  <div style="font-size:0.6rem; color:var(--text-muted);">E-Bike</div>
+                </div>
+
+                <div class="transit-mode-btn active" id="modeTwoWheeler" onclick="setTransitMode('TWO_WHEELER')">
+                  <i class="fas fa-motorcycle" style="font-size:1.15rem; color:#f59e0b;"></i>
+                  <div style="font-weight:700;" id="timeTwoWheeler">5m</div>
+                  <div style="font-size:0.6rem; color:var(--text-muted);">2-Wheeler</div>
+                </div>
+
+                <div class="transit-mode-btn" id="modeCar" onclick="setTransitMode('CAR')">
+                  <i class="fas fa-car" style="font-size:1.15rem; color:#ef4444;"></i>
+                  <div style="font-weight:700;" id="timeCar">5m</div>
+                  <div style="font-size:0.6rem; color:var(--text-muted);">Cab / Car</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hospital Quick Help Box -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:var(--radius-md); padding:12px 14px; font-size:0.8rem; color:#64748b;">
+              <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">
+                <i class="fas fa-hospital-alt" style="color:#10b981;"></i> Apex City Care Super-Specialty Hospital
+              </div>
+              <div><i class="fas fa-map-pin" style="color:#ef4444;"></i> Ring Road, Sector 12, Metro Junction, New Delhi - 110029</div>
+              <div style="margin-top:4px;"><i class="fas fa-phone-alt" style="color:#0ea5e9;"></i> 24/7 Emergency Hotline: <strong>+91 11 2659 8888</strong></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 2: BOOK NEW APPOINTMENT (DOCTOR & FREE TIME SLOTS) -->
+      <!-- =================================================================== -->
+      <div id="sectionTabBook" class="tab-pane fade-in-up" style="display:none;">
+        <div style="max-width:760px; margin:0 auto; background:#ffffff; border:1.5px solid var(--border-light); border-radius:var(--radius-lg); padding:2rem;" class="soft-glass-card">
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <span class="badge badge-mint" style="margin-bottom:6px;"><i class="fas fa-calendar-check"></i> Instant OPD Booking</span>
+            <h2 style="font-family:'Poppins',sans-serif; font-size:1.6rem; font-weight:800; color:#0f172a; margin:0;">
+              Book Doctor Consultation & Get QR Pass
+            </h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">
+              Select from 10 specialist doctors, calculate distance travel time, and pick from available free slots.
+            </p>
+          </div>
+
+          <form id="bookAppointmentForm" onsubmit="handleBookAppointmentSubmit(event)">
+            <!-- Step 1: Select Specialist Doctor -->
+            <div class="form-group">
+              <label class="form-label" style="font-weight:700;">
+                <i class="fas fa-user-md" style="color:#10b981;"></i> 1. Choose Specialist Doctor (10 Available):
+              </label>
+              <select id="bookDoctorSelect" class="form-input" onchange="handleBookDoctorChange()" style="font-weight:600; font-size:0.9rem;">
+                <!-- Populated dynamically with 10 Doctors -->
+              </select>
+            </div>
+
+            <!-- Doctor Live Info Card -->
+            <div id="bookDoctorPreviewCard" style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+              <!-- Populated dynamically -->
+            </div>
+
+            <!-- Step 2: Choose Free Time Slot -->
+            <div class="form-group">
+              <label class="form-label" style="font-weight:700;">
+                <i class="fas fa-clock" style="color:#0ea5e9;"></i> 2. Choose Doctor's Available Free Time Slot:
+              </label>
+              <div id="bookDoctorSlotsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Step 3: Distance & Live Travel Calculation -->
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label class="form-label" style="font-weight:700; color:#14532d; margin:0;">
+                  <i class="fas fa-map-marker-alt" style="color:#10b981;"></i> 3. Your Distance from Hospital:
+                </label>
+                <span class="badge badge-mint" id="bookDistanceLabel">2.5 km</span>
+              </div>
+
+              <div class="grid-2" style="gap:1rem; margin-bottom:10px;">
+                <div>
+                  <select id="bookLocationSelect" class="form-input" onchange="handleBookLocationChange()" style="font-size:0.85rem; background:#fff;">
+                    <option value="1.2">South Extension, South Zone (1.2 km)</option>
+                    <option value="2.5" selected>Connaught Place, Central Zone (2.5 km)</option>
+                    <option value="4.5">Karol Bagh, West Zone (4.5 km)</option>
+                    <option value="6.4">Vasant Kunj, South West (6.4 km)</option>
+                    <option value="8.5">Noida Sector 62, East Zone (8.5 km)</option>
+                    <option value="12.0">Gurugram Cyber City (12.0 km)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div style="display:flex; gap:6px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="bookPillWalk" onclick="setBookTransitMode('WALK')">Walk</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="bookPillBike" onclick="setBookTransitMode('TWO_WHEELER')">2-Wheeler</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="bookPillCar" onclick="setBookTransitMode('CAR')">Car / Cab</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="travel-preview-box">
+                <div>
+                  <div style="font-size:0.75rem; color:#065f46; font-weight:700;">DYNAMIC TRAVEL TIME:</div>
+                  <div style="font-size:0.85rem; color:#047857;" id="bookTravelSummaryText">
+                    Takes approx <strong>5 mins</strong> to reach hospital OPD
+                  </div>
+                </div>
+                <div style="font-size:1.5rem; font-weight:800; color:#065f46;" id="bookTravelTimeDisplay">
+                  5 mins
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Medical Complaint -->
+            <div class="form-group">
+              <label class="form-label" style="font-weight:700;">
+                <i class="fas fa-notes-medical" style="color:#e11d48;"></i> 4. Chief Medical Concern / Symptoms:
+              </label>
+              <input type="text" id="bookComplaintInput" class="form-input" placeholder="e.g. Chest pain, high fever, joint swelling, allergy" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-soft-glow" style="padding:14px; font-size:1rem; font-weight:700;">
+              <i class="fas fa-check-circle"></i> Confirm Appointment & Generate Scannable QR Pass
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 3: 10 SPECIALIST DOCTORS DIRECTORY -->
+      <!-- =================================================================== -->
+      <div id="sectionTabDoctors" class="tab-pane fade-in-up" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h2 style="font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">
+              Apex Hospital Specialists Directory (10 Doctors)
+            </h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:2px 0 0;">
+              Click 'View Doctor QR Profile' on any doctor to view their verified digital credentials and hotline
+            </p>
+          </div>
+          <span class="badge badge-blue">10 CLINICAL DEPARTMENTS ACTIVE</span>
+        </div>
+
+        <div id="doctorsDirectoryList">
+          <!-- Populated dynamically with 10 Doctors Cards -->
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 4: 10 HOSPITAL FLOOR STAFF & COUNTERS -->
+      <!-- =================================================================== -->
+      <div id="sectionTabStaff" class="tab-pane fade-in-up" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h2 style="font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">
+              Hospital Floor Operations & Staff (10 Calling Desks)
+            </h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:2px 0 0;">
+              Each OPD desk has an assigned calling operator. Click 'View Staff QR' to inspect official credentials.
+            </p>
+          </div>
+          <span class="badge badge-mint">ALL 10 DESKS ON DUTY</span>
+        </div>
+
+        <div id="staffDirectoryList">
+          <!-- Populated dynamically with 10 Staff Members -->
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 5: ALL 10 HOSPITAL PATIENT PASSES & QUEUE -->
+      <!-- =================================================================== -->
+      <div id="sectionTabAllPatients" class="tab-pane fade-in-up" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h2 style="font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">
+              Hospital OPD Client Roster (10 Patients)
+            </h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:2px 0 0;">
+              Real-time patient tracking with calculated travel distances, transport modes, and digital QR passes
+            </p>
+          </div>
+          <span class="badge badge-purple">10 REGISTERED CLIENTS</span>
+        </div>
+
+        <div id="allPatientsList">
+          <!-- Populated dynamically with 10 Patients -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="formal-footer"></footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    let currentDistanceKm = 2.8;
+    let selectedMode = 'TWO_WHEELER';
+    let myToken = null;
+    let bookSelectedSlot = '10:30 AM';
+    let bookSelectedTransitMode = 'TWO_WHEELER';
+    let bookSelectedDistance = 2.5;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUniversalHospitalNav('patient');
+      renderDynamicFooter();
+
+      // Populate 10-patient switcher
+      populatePatientSwitcher();
+
+      // Render tab data
+      renderDoctorsDirectory();
+      renderStaffDirectory();
+      renderAllPatientsQueue();
+      setupBookAppointmentForm();
+
+      // Initial synchronization
+      syncPatientPortal();
+
+      // Real-time synchronization via BroadcastChannel
+      if (typeof BroadcastChannel !== 'undefined' && broadcastChannel) {
+        broadcastChannel.onmessage = () => {
+          syncPatientPortal();
+          renderAllPatientsQueue();
+        };
+      }
+    });
+
+    // Tab Navigation Switcher
+    function switchAppTab(tabKey) {
+      document.querySelectorAll('.app-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+
+      if (tabKey === 'pass') {
+        document.getElementById('tabBtnPass').classList.add('active');
+        document.getElementById('sectionTabPass').style.display = 'block';
+      } else if (tabKey === 'book') {
+        document.getElementById('tabBtnBook').classList.add('active');
+        document.getElementById('sectionTabBook').style.display = 'block';
+      } else if (tabKey === 'doctors') {
+        document.getElementById('tabBtnDoctors').classList.add('active');
+        document.getElementById('sectionTabDoctors').style.display = 'block';
+      } else if (tabKey === 'staff') {
+        document.getElementById('tabBtnStaff').classList.add('active');
+        document.getElementById('sectionTabStaff').style.display = 'block';
+      } else if (tabKey === 'allPatients') {
+        document.getElementById('tabBtnAllPatients').classList.add('active');
+        document.getElementById('sectionTabAllPatients').style.display = 'block';
+      }
+    }
+
+    // Populate 10-Patient Switcher
+    function populatePatientSwitcher() {
+      const clients = getHospitalClients();
+      const user = getCurrentUser() || clients[0];
+      const select = document.getElementById('selectActivePatient');
+      if (!select) return;
+
+      select.innerHTML = clients.map(c => `
+        <option value="${c.tokenNumber}" ${user.tokenNumber === c.tokenNumber || user.name === c.userName ? 'selected' : ''}>
+          ${c.userName} (${c.tokenNumber} - ${c.specialty || 'OPD'})
+        </option>
+      `).join('');
+    }
+
+    function handlePatientSwitcherChange() {
+      const tokenNum = document.getElementById('selectActivePatient').value;
+      const clients = getHospitalClients();
+      const patient = clients.find(c => c.tokenNumber === tokenNum);
+      if (patient) {
+        localStorage.setItem('ql_current_user', JSON.stringify({
+          name: patient.userName,
+          email: patient.email || 'patient@queueless.com',
+          role: 'VISITOR',
+          tokenNumber: patient.tokenNumber,
+          distanceKm: patient.distanceKm,
+          transitMode: patient.transitMode
+        }));
+        showToast(`Viewing active pass for ${patient.userName} (${patient.tokenNumber})`, 'info');
+        syncPatientPortal();
+      }
+    }
+
+    // Sync Active Patient Dashboard
+    function syncPatientPortal() {
+      const state = getHospitalState();
+      const tokens = getTokens();
+      const dynamicQueue = getDynamicHospitalQueue();
+      const user = getCurrentUser() || { name: 'Aarav Sharma', tokenNumber: 'MED-101' };
+
+      // Emergency notice
+      const emrNotice = document.getElementById('patientEmergencyNotice');
+      if (emrNotice) emrNotice.style.display = state.emergencyActive ? 'flex' : 'none';
+
+      // Find token
+      myToken = tokens.find(t => t.tokenNumber === user.tokenNumber || t.userName === user.name) || tokens[0];
+
+      if (myToken) {
+        currentDistanceKm = myToken.distanceKm || 2.8;
+        selectedMode = myToken.transitMode || 'TWO_WHEELER';
+
+        document.getElementById('topPatientName').textContent = myToken.userName;
+        document.getElementById('topPatientSubtitle').textContent = `Pass #${myToken.tokenNumber} • ${myToken.serviceName} • Distance: ${currentDistanceKm} km`;
+
+        document.getElementById('clientTokenNumDisplay').textContent = myToken.tokenNumber;
+        document.getElementById('clientHospitalServiceName').textContent = myToken.serviceName;
+        document.getElementById('clientDoctorDetailText').textContent = `Room ${myToken.roomNo || 101} • ${myToken.doctorName || 'Dr. Sarah Mehta, MD'} (Avg. Consultation: 10 mins)`;
+        document.getElementById('clientServiceBadge').textContent = `${(myToken.serviceName || 'OPD').toUpperCase()} PASS`;
+
+        // Queue position calculation
+        const queuePos = dynamicQueue.findIndex(q => q.tokenNumber === myToken.tokenNumber);
+        const aheadCount = queuePos === -1 ? 0 : queuePos;
+        document.getElementById('clientAheadCount').textContent = aheadCount;
+
+        // Estimated Wait calculation
+        const baseDocMins = state.normalConsultationMins || 10;
+        const emrDelay = state.emergencyActive ? (state.emergencyDelayMins || 12) : 0;
+        const extDelay = state.doctorExtendedMins || 0;
+        const totalWaitMins = (aheadCount * baseDocMins) + emrDelay + extDelay;
+        document.getElementById('clientEstWaitMins').textContent = `~${totalWaitMins} mins`;
+
+        // Estimated Call Time
+        const now = new Date();
+        const callTime = new Date(now.getTime() + totalWaitMins * 60000);
+        const callTimeStr = callTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('clientEstimatedCallTime').textContent = callTimeStr;
+
+        // Departure Alarm & Transit recalculation
+        recalculateTransitAndAlarm(callTime);
+
+        // Status badge
+        const badge = document.getElementById('clientTokenStatusBadge');
+        if (myToken.tokenNumber === state.currentPatientToken) {
+          badge.textContent = 'IN SESSION WITH DOCTOR';
+          badge.className = 'badge badge-green';
+        } else if (aheadCount === 0) {
+          badge.textContent = `NEXT IN LINE — PLEASE ENTER ROOM ${myToken.roomNo || 101}`;
+          badge.className = 'badge badge-peach';
+        } else {
+          badge.textContent = `QUEUED (#${aheadCount + 1})`;
+          badge.className = 'badge badge-blue';
+        }
+      }
+    }
+
+    function recalculateTransitAndAlarm(callTime) {
+      const transit = calculateDetailedTransitTimes(currentDistanceKm);
+      document.getElementById('badgeTransitDist').textContent = `${currentDistanceKm.toFixed(1)} km`;
+
+      document.getElementById('timeWalk').textContent = `${transit.walk.min}m`;
+      document.getElementById('timeCycle').textContent = `${transit.cycle.min}m`;
+      document.getElementById('timeEbike').textContent = `${transit.eBike.min}m`;
+      document.getElementById('timeTwoWheeler').textContent = `${transit.twoWheeler.min}m`;
+      document.getElementById('timeCar').textContent = `${transit.fourWheeler.min}m`;
+
+      let transitMins = transit.twoWheeler.min;
+      let modeLabel = '2-Wheeler';
+      if (selectedMode === 'WALK') { transitMins = transit.walk.min; modeLabel = 'Walk'; }
+      if (selectedMode === 'CYCLE') { transitMins = transit.cycle.min; modeLabel = 'Cycle'; }
+      if (selectedMode === 'EBIKE') { transitMins = transit.eBike.min; modeLabel = 'E-Bike'; }
+      if (selectedMode === 'CAR') { transitMins = transit.fourWheeler.min; modeLabel = 'Cab/Car'; }
+
+      const departureTime = new Date(callTime.getTime() - transitMins * 60000);
+      const departureTimeStr = departureTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      document.getElementById('alarmDepartureTime').textContent = departureTimeStr;
+      document.getElementById('alarmSubtext').textContent = `Depart by ${departureTimeStr} via ${modeLabel} (${transitMins}m travel) to reach OPD right before your consultation starts!`;
+    }
+
+    function setTransitMode(mode) {
+      selectedMode = mode;
+      document.querySelectorAll('.transit-mode-btn').forEach(b => b.classList.remove('active'));
+      if (mode === 'WALK') document.getElementById('modeWalk').classList.add('active');
+      if (mode === 'CYCLE') document.getElementById('modeCycle').classList.add('active');
+      if (mode === 'EBIKE') document.getElementById('modeEbike').classList.add('active');
+      if (mode === 'TWO_WHEELER') document.getElementById('modeTwoWheeler').classList.add('active');
+      if (mode === 'CAR') document.getElementById('modeCar').classList.add('active');
+      syncPatientPortal();
+    }
+
+    function handleLocationChange() {
+      const val = document.getElementById('selectClientLocation').value;
+      const parts = val.split('|');
+      currentDistanceKm = parseFloat(parts[0]);
+      showToast(`Updated location to ${parts[1]} (${currentDistanceKm} km). Recalculating transit...`, 'info');
+      syncPatientPortal();
+    }
+
+    function handleReportTrafficDelay() {
+      if (!myToken) return;
+      reportClientTransitDelay(myToken.tokenNumber, 10);
+      showToast('Traffic delay of +10 mins reported to floor staff. Calling priority shifted safely!', 'warning');
+      syncPatientPortal();
+    }
+
+    function triggerMyPassQR() {
+      if (myToken) {
+        viewPatientAppointmentQR(myToken.tokenNumber);
+      }
+    }
+
+    // ===================================================================
+    // TAB 2: BOOK APPOINTMENT SETUP
+    // ===================================================================
+    function setupBookAppointmentForm() {
+      const doctors = getDoctors();
+      const select = document.getElementById('bookDoctorSelect');
+      if (!select) return;
+
+      select.innerHTML = doctors.map(d => `
+        <option value="${d.id}">${d.name} (${d.specialty}) • ${d.room}</option>
+      `).join('');
+
+      handleBookDoctorChange();
+      recalculateBookTravel();
+    }
+
+    function handleBookDoctorChange() {
+      const doctors = getDoctors();
+      const docId = document.getElementById('bookDoctorSelect').value;
+      const doc = doctors.find(d => d.id === docId) || doctors[0];
+
+      // Preview Card
+      document.getElementById('bookDoctorPreviewCard').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:1.05rem; font-weight:800; color:#0f172a;">${doc.name}</div>
+            <div style="font-size:0.8rem; color:#64748b;">${doc.qualification} • <strong>${doc.specialty}</strong></div>
+            <div style="font-size:0.75rem; color:#059669; margin-top:2px;">
+              <i class="fas fa-map-marker-alt"></i> ${doc.room} • OPD: ${doc.opdTimings} • Rating: ⭐ ${doc.rating}
+            </div>
+          </div>
+          <button type="button" class="qr-badge-btn" onclick="viewDoctorQR('${doc.id}')">
+            <i class="fas fa-qrcode"></i> View Doctor QR
+          </button>
+        </div>
+      `;
+
+      // Free Slots
+      const slotsContainer = document.getElementById('bookDoctorSlotsContainer');
+      slotsContainer.innerHTML = doc.freeSlots.map((slot, idx) => `
+        <button type="button" class="slot-pill-btn ${idx === 0 ? 'active' : ''}" onclick="selectBookSlot('${slot}', this)">
+          <i class="fas fa-clock"></i> ${slot}
+        </button>
+      `).join('');
+
+      bookSelectedSlot = doc.freeSlots[0] || '10:30 AM';
+    }
+
+    function selectBookSlot(slot, btn) {
+      bookSelectedSlot = slot;
+      document.querySelectorAll('#bookDoctorSlotsContainer .slot-pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function handleBookLocationChange() {
+      bookSelectedDistance = parseFloat(document.getElementById('bookLocationSelect').value);
+      document.getElementById('bookDistanceLabel').textContent = `${bookSelectedDistance} km`;
+      recalculateBookTravel();
+    }
+
+    function setBookTransitMode(mode) {
+      bookSelectedTransitMode = mode;
+      document.getElementById('bookPillWalk').className = mode === 'WALK' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      document.getElementById('bookPillBike').className = mode === 'TWO_WHEELER' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      document.getElementById('bookPillCar').className = mode === 'CAR' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      recalculateBookTravel();
+    }
+
+    function recalculateBookTravel() {
+      const transit = calculateDetailedTransitTimes(bookSelectedDistance);
+      const info = bookSelectedTransitMode === 'WALK' ? transit.walk :
+                   bookSelectedTransitMode === 'CAR' ? transit.fourWheeler : transit.twoWheeler;
+
+      document.getElementById('bookTravelTimeDisplay').textContent = `${info.durationMins} mins`;
+      document.getElementById('bookTravelSummaryText').innerHTML = `
+        Takes approx <strong>${info.durationMins} mins</strong> via ${info.label} (${bookSelectedDistance} km)
+      `;
+    }
+
+    function handleBookAppointmentSubmit(e) {
+      e.preventDefault();
+      const docId = document.getElementById('bookDoctorSelect').value;
+      const complaint = document.getElementById('bookComplaintInput').value.trim();
+      const user = getCurrentUser() || { name: 'Aarav Sharma', phone: '+91 98765 43210' };
+
+      const booking = bookPatientAppointment({
+        patientName: user.name,
+        phone: user.phone,
+        email: user.email,
+        doctorId: docId,
+        distanceKm: bookSelectedDistance,
+        transitMode: bookSelectedTransitMode,
+        chosenSlot: bookSelectedSlot,
+        complaint
+      });
+
+      if (booking.success) {
+        showToast(`Appointment Confirmed! Token #${booking.token.tokenNumber} generated!`, 'success');
+
+        // Switch active user session
+        user.tokenNumber = booking.token.tokenNumber;
+        user.distanceKm = bookSelectedDistance;
+        user.transitMode = bookSelectedTransitMode;
+        localStorage.setItem('ql_current_user', JSON.stringify(user));
+
+        populatePatientSwitcher();
+        syncPatientPortal();
+        renderAllPatientsQueue();
+
+        // Switch back to pass tab and show QR
+        switchAppTab('pass');
+        setTimeout(() => {
+          viewPatientAppointmentQR(booking.token.tokenNumber);
+        }, 400);
+      }
+    }
+
+    // ===================================================================
+    // TAB 3: 10 SPECIALIST DOCTORS DIRECTORY
+    // ===================================================================
+    function renderDoctorsDirectory() {
+      const doctors = getDoctors();
+      const container = document.getElementById('doctorsDirectoryList');
+      if (!container) return;
+
+      container.innerHTML = doctors.map(d => `
+        <div class="doctor-card-item soft-glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; gap:14px; align-items:center;">
+              <div style="width:52px; height:52px; border-radius:50%; background:${d.avatarBg || '#10b981'}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                <i class="fas ${d.icon || 'fa-user-md'}"></i>
+              </div>
+              <div>
+                <div style="font-size:1.1rem; font-weight:800; color:#0f172a;">${d.name}</div>
+                <div style="font-size:0.85rem; color:#059669; font-weight:700;">${d.specialty}</div>
+                <div style="font-size:0.75rem; color:#64748b;">${d.qualification} • ${d.experienceYrs} Yrs Experience</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="qr-badge-btn" onclick="viewDoctorQR('${d.id}')">
+                <i class="fas fa-qrcode"></i> View Doctor QR Profile
+              </button>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:12px; background:#f8fafc; padding:10px; border-radius:8px; font-size:0.78rem;">
+            <div><i class="fas fa-door-open" style="color:#0ea5e9;"></i> Room: <strong>${d.room}</strong></div>
+            <div><i class="fas fa-clock" style="color:#f59e0b;"></i> OPD: <strong>${d.opdTimings}</strong></div>
+            <div><i class="fas fa-phone-alt" style="color:#10b981;"></i> Desk Ext: <strong>${d.phone}</strong></div>
+            <div><i class="fas fa-star" style="color:#eab308;"></i> Rating: <strong>⭐ ${d.rating} / 5.0</strong></div>
+          </div>
+
+          <div style="margin-top:10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:0.7rem; font-weight:700; color:#64748b;">Available Free Slots:</span>
+            ${d.freeSlots.map(s => `
+              <span class="badge" style="background:#f1f5f9; color:#334155; font-size:0.7rem;">${s}</span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===================================================================
+    // TAB 4: 10 HOSPITAL FLOOR STAFF & COUNTERS
+    // ===================================================================
+    function renderStaffDirectory() {
+      const staffList = getStaffMembers();
+      const container = document.getElementById('staffDirectoryList');
+      if (!container) return;
+
+      container.innerHTML = staffList.map(s => `
+        <div class="staff-card-item soft-glass-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:#0ea5e9; color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
+              <i class="fas fa-user-nurse"></i>
+            </div>
+            <div>
+              <div style="font-size:0.95rem; font-weight:800; color:#0f172a;">${s.name}</div>
+              <div style="font-size:0.78rem; color:#0284c7; font-weight:600;">${s.designation}</div>
+              <div style="font-size:0.72rem; color:#64748b;">
+                Staff ID: <strong>${s.staffId}</strong> • Shift: ${s.shift} • Contact: ${s.phone}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="badge badge-mint" style="font-size:0.72rem;">${s.assignedDesk}</span>
+            <button class="qr-badge-btn" onclick="viewStaffQR('${s.staffId}')">
+              <i class="fas fa-qrcode"></i> View Staff QR
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===================================================================
+    // TAB 5: ALL 10 HOSPITAL PATIENT PASSES & QUEUE
+    // ===================================================================
+    function renderAllPatientsQueue() {
+      const clients = getHospitalClients();
+      const container = document.getElementById('allPatientsList');
+      if (!container) return;
+
+      container.innerHTML = clients.map((c, idx) => `
+        <div class="entity-list-card soft-glass-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:800; color:var(--primary); width:85px;">
+              ${c.tokenNumber}
+            </div>
+            <div>
+              <div style="font-size:0.95rem; font-weight:800; color:#0f172a;">${c.userName}</div>
+              <div style="font-size:0.78rem; color:#64748b;">
+                Doctor: <strong>${c.doctorName || 'Dr. Sarah Mehta'}</strong> • Slot: <strong>${c.slotTime || '10:30 AM'}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:#059669;">
+                <i class="fas fa-map-pin"></i> ${c.distanceKm} km away (${c.transitMode || '2-Wheeler'}) • Concern: <em>${c.chiefComplaint || 'Consultation'}</em>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="badge ${c.status === 'IN_SERVICE' ? 'badge-green' : 'badge-blue'}" style="font-size:0.72rem;">
+              ${c.status || 'QUEUED'}
+            </span>
+            <button class="qr-badge-btn" onclick="viewPatientAppointmentQR('${c.tokenNumber}')">
+              <i class="fas fa-qrcode"></i> View QR Pass
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

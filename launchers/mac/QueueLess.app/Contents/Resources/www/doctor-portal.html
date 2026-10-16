@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Clinical Console — Apex City Care Hospital</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .doctor-header-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .doctor-profile-block {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .doctor-avatar-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #0ea5e9);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      border: 3px solid rgba(255,255,255,0.2);
+    }
+    .doctor-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.4rem 1.6rem;
+      box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.06);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: #cbd5e1;
+      box-shadow: 0 10px 25px -4px rgba(79, 143, 203, 0.16);
+    }
+    .stat-card.stat-standard { border-top: 4px solid var(--primary); }
+    .stat-card.stat-offset { border-top: 4px solid #d97706; }
+    .stat-card.stat-patients { border-top: 4px solid #10b981; }
+    .stat-card.stat-sync { border-top: 4px solid #0ea5e9; }
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.75px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 0.65rem;
+    }
+    .stat-label-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    .stat-value {
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin: 0.2rem 0 0.45rem 0;
+      letter-spacing: -0.5px;
+    }
+    .stat-desc {
+      font-size: 0.8rem;
+      color: #64748b;
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .timer-ring-box {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .timer-digital {
+      font-family: 'Outfit', 'Poppins', monospace;
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 2px;
+      margin: 0.5rem 0;
+    }
+    .timer-digital.warning {
+      color: #e11d48;
+      animation: pulseAlert 1.5s infinite;
+    }
+    @keyframes pulseAlert {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    .emergency-banner-box {
+      background: linear-gradient(135deg, #be123c, #881337);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: pulseAlert 2s infinite;
+      box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+    }
+    .patient-action-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    /* VPay & Animated Styles */
+    .animated-ticker-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .vpay-promo-advert-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+      color: #ffffff;
+      padding: 1.25rem 1.6rem;
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 8px 24px -4px rgba(49, 46, 129, 0.3);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .vpay-active-license-bar {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 4px 18px rgba(6, 78, 59, 0.25);
+    }
+    .vpay-tier-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.5rem 1.25rem;
+      background: #ffffff;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .vpay-tier-card:hover {
+      border-color: #4f8fcb;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(79, 143, 203, 0.15);
+    }
+    .vpay-tier-card.selected {
+      border-color: #7c3aed;
+      background: #faf5ff;
+      box-shadow: 0 0 0 2px #7c3aed;
+    }
+    .vpay-method-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .vpay-method-pill:hover, .vpay-method-pill.active {
+      border-color: #2563eb;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+    /* VPay & Power Tool Modals */
+    .vpay-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .vpay-modal-container {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 980px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+      position: relative;
+      animation: modalPopIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    @keyframes modalPopIn {
+      from { opacity: 0; transform: scale(0.95) translateY(18px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .vpay-tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .vpay-badge-popular {
+      position: absolute;
+      top: -12px;
+      right: 18px;
+      background: linear-gradient(135deg, #d97706, #b45309);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Hospital Navbar -->
+  <header class="navbar"></header>
+
+  <main class="container" style="padding-top:2rem; padding-bottom:3rem;">
+
+    <!-- Active Doctor Console Switcher (10 Doctors) -->
+    <div style="background:#ffffff; border:1.5px solid var(--border-light); border-radius:var(--radius-md); padding:10px 16px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;" class="soft-glass-card">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <label style="font-size:0.8rem; font-weight:700; color:#475569;">
+          <i class="fas fa-user-md" style="color:#10b981;"></i> Active Doctor Console (10 Doctors):
+        </label>
+        <select id="selectActiveDoctorConsole" class="form-input" style="padding:6px 12px; font-size:0.85rem; font-weight:700; background:#fff;" onchange="handleDoctorConsoleSwitch()">
+          <!-- Populated dynamically with 10 Doctors -->
+        </select>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline-primary btn-sm" onclick="triggerCurrentDoctorQR()">
+          <i class="fas fa-qrcode"></i> View My Doctor QR Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Doctor Header Card with Animated Ticker -->
+    <div class="doctor-header-card">
+      <div class="doctor-profile-block">
+        <div class="doctor-avatar-circle float-subtle" id="docAvatarCircle">
+          <i class="fas fa-user-md"></i>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h1 style="font-size:1.65rem; font-weight:800; margin:0; color:#fff; font-family:'Outfit',sans-serif;" id="docNameText">Dr. Sarah Mehta, MD</h1>
+            <span class="badge" style="background:#10b981; color:#fff; font-size:0.75rem; font-weight:800;" id="docBadgeText">CHIEF CONSULTANT</span>
+            <span class="animated-ticker-badge"><span class="pulse-live-dot"></span> LIVE OPD CONSOLE</span>
+          </div>
+          <div style="font-size:0.9rem; color:#94a3b8; margin-top:4px;" id="docDepartmentText">
+            <i class="fas fa-heartbeat" style="color:#ef4444;"></i> Cardiology & Internal Medicine OPD • Room 101 (Main Wing)
+          </div>
+          <div style="font-size:0.8rem; color:#cbd5e1; margin-top:2px;">
+            <i class="fas fa-hospital"></i> Apex City Care Super-Specialty Hospital, Ring Road, New Delhi
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-outline-danger" id="emergencyToggleBtn" onclick="toggleEmergencyModal()" style="color:#fecdd3; border-color:#e11d48; background:rgba(225,29,72,0.15);">
+          <i class="fas fa-ambulance"></i> Declare Emergency Case
+        </button>
+        <button class="btn btn-primary" onclick="extendConsultationPrompt()">
+          <i class="fas fa-stopwatch"></i> +5 Min Extension
+        </button>
+        <button class="btn btn-warning" id="btnHeaderUpgrade" onclick="openDoctorPaymentModal('PLATINUM')" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; font-weight:700; border:none;">
+          <i class="fas fa-crown"></i> Platform Subscription
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Emergency Alert Box if Active -->
+    <div id="emergencyStatusBanner" style="display:none;" class="emergency-banner-box">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <i class="fas fa-exclamation-triangle" style="font-size:1.8rem; color:#fef08a;"></i>
+        <div>
+          <strong style="font-size:1.1rem; letter-spacing:0.5px;">HOSPITAL EMERGENCY CASE IN PROGRESS</strong>
+          <div style="font-size:0.85rem; color:#fecdd3;" id="emergencyBannerReason">Trauma resuscitation active in Bay 1. All routine OPD consultations delayed by +12 mins.</div>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="background:#ffffff; color:#991b1b; font-weight:700;" onclick="handleEmergencyClear()">
+        <i class="fas fa-check-circle"></i> Clear Emergency Override
+      </button>
+    </div>
+
+    <!-- 1. Promotional Upgrade Advertisement Banner (Shown ONLY when Free / No Purchased Features) -->
+    <div id="vpayDoctorAdBanner" class="vpay-promo-advert-banner">
+      <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:280px;">
+        <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #7c3aed, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 4px 12px rgba(124,58,237,0.4); flex-shrink:0;">
+          <i class="fas fa-crown"></i>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <strong style="font-size:1.05rem; font-family:'Outfit',sans-serif; letter-spacing:0.3px;">UPGRADE CLINICAL CONSOLE — PRO & PLATINUM SUITE</strong>
+            <span class="badge" style="background:#f59e0b; color:#fff; font-size:0.68rem; padding:2px 8px; font-weight:800;">DIRECT OWNER PAY</span>
+          </div>
+          <div style="font-size:0.83rem; color:#cbd5e1; margin-top:3px; line-height:1.4;">
+            Pay Platform Owner to unlock <strong>AI Diagnostic Copilot</strong>, <strong>WhatsApp Patient Queue Alerts</strong> & <strong>GPS Transit Radar</strong>. Instant activation.
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-sm" style="background:#ffffff; color:#312e81; font-weight:700; border-radius:10px; padding:8px 14px;" onclick="openDoctorPaymentModal('PLATINUM')">
+          <i class="fas fa-crown" style="color:#d97706;"></i> Platinum AI (₹3,999)
+        </button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:10px; padding:8px 12px;" onclick="openDoctorPaymentModal('PRO')">
+          <i class="fas fa-shield-alt"></i> Pro Tier (₹1,499)
+        </button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.1); color:#e0e7ff; border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:8px 10px;" onclick="openDoctorPaymentModal('SINGLE')">
+          <i class="fas fa-puzzle-piece"></i> Buy Single Feature
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Active Verified License Bar (Visible ONLY when ANY Tier or Single Feature is Purchased -> 100% Ad-Free!) -->
+    <div id="vpayActiveLicenseBar" class="vpay-active-license-bar" style="display:none;">
+      <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:280px;">
+        <div style="width:46px; height:46px; border-radius:12px; background:rgba(255,255,255,0.2); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
+          <i class="fas fa-certificate" style="color:#fde047;"></i>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.8px; opacity:0.85; font-weight:700;">Verified Platform Owner Subscription:</span>
+            <span id="activePlanTitleBadge" class="badge" style="background:#ffffff; color:#064e3b; font-weight:800; font-size:0.75rem;">ENTERPRISE PLATINUM AI</span>
+            <span class="badge" style="background:rgba(255,255,255,0.25); color:#fff; font-size:0.68rem;"><i class="fas fa-ban"></i> 100% AD-FREE CLINICAL CONSOLE</span>
+          </div>
+          <div style="font-size:0.82rem; opacity:0.95; margin-top:3px;">
+            Licensed to <strong id="licensedDoctorName">Dr. Sarah Mehta</strong> • Owner Txn: <code id="activeReceiptCode" style="color:#fef08a; background:rgba(0,0,0,0.2); padding:1px 6px; border-radius:4px;">TXN-QL-884920</code> • Status: <strong>PAID TO PLATFORM OWNER</strong>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-sm" style="background:#ffffff; color:#065f46; font-weight:700; border-radius:10px; padding:7px 12px;" onclick="viewOwnerPaymentReceipt()">
+          <i class="fas fa-receipt"></i> Owner Payment Receipt
+        </button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:10px; padding:7px 12px;" onclick="openDoctorPaymentModal()">
+          <i class="fas fa-cog"></i> Manage Plan
+        </button>
+        <button class="btn btn-sm" style="background:transparent; color:#fca5a5; font-size:0.75rem; text-decoration:underline; border:none; padding:4px;" onclick="resetDoctorSubscription()" title="Reset to Free Tier for testing">
+          Reset Demo
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Access Unlocked Premium Toolset Bar -->
+    <div id="unlockedFeatureQuickBar" style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:10px 16px; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-sparkles" style="color:#7c3aed;"></i>
+        <span style="font-size:0.82rem; font-weight:700; color:#334155;">Clinical Power Suite:</span>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" id="btnAiCopilot" style="background:#ede9fe; color:#6d28d9; border:1px solid #c4b5fd; font-weight:700;" onclick="handleAiCopilotClick()">
+          <i class="fas fa-brain"></i> AI Diagnostic Copilot
+        </button>
+        <button class="btn btn-sm" id="btnWhatsAppAlert" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-weight:700;" onclick="handleWhatsAppAlertClick()">
+          <i class="fab fa-whatsapp"></i> Live Patient WhatsApp Alert
+        </button>
+        <button class="btn btn-sm" id="btnTransitRadar" style="background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; font-weight:700;" onclick="handleTransitRadarClick()">
+          <i class="fas fa-satellite-dish"></i> GPS Transit Radar
+        </button>
+        <button class="btn btn-sm" id="btnRxMaker" style="background:#fffbeb; color:#92400e; border:1px solid #fde68a; font-weight:700;" onclick="handleRxMakerClick()">
+          <i class="fas fa-file-prescription"></i> Digital Rx Maker
+        </button>
+      </div>
+    </div>
+
+    <!-- Doctor Metrics Grid (Adjusted Fonts, Generous 1.6rem Padding, No Border Collision) -->
+    <div class="doctor-metrics-grid">
+      <div class="stat-card stat-standard">
+        <div class="stat-label">
+          <span class="stat-label-icon" style="background:#eff6ff; color:var(--primary);"><i class="fas fa-clock"></i></span>
+          <span>STANDARD CONSULTATION</span>
+        </div>
+        <div class="stat-value" style="color:var(--primary);">10 Mins</div>
+        <div class="stat-desc">
+          <i class="fas fa-check-circle" style="color:#10b981; font-size:0.75rem;"></i> Per patient baseline protocol
+        </div>
+      </div>
+
+      <div class="stat-card stat-offset">
+        <div class="stat-label">
+          <span class="stat-label-icon" style="background:#fffbeb; color:#d97706;"><i class="fas fa-stopwatch"></i></span>
+          <span>TIME EXTENSION OFFSET</span>
+        </div>
+        <div class="stat-value" id="statExtensionMins" style="color:#d97706;">+0 Mins</div>
+        <div class="stat-desc">
+          <i class="fas fa-bolt" style="color:#d97706; font-size:0.75rem;"></i> Applied to waiting queue in real time
+        </div>
+      </div>
+
+      <div class="stat-card stat-patients">
+        <div class="stat-label">
+          <span class="stat-label-icon" style="background:#ecfdf5; color:#10b981;"><i class="fas fa-users"></i></span>
+          <span>OPD PATIENTS TODAY</span>
+        </div>
+        <div class="stat-value" id="statPatientsCount" style="color:#10b981;">10</div>
+        <div class="stat-desc">
+          <i class="fas fa-clipboard-check" style="color:#10b981; font-size:0.75rem;"></i> Registered on current roster
+        </div>
+      </div>
+
+      <div class="stat-card stat-sync">
+        <div class="stat-label">
+          <span class="stat-label-icon" style="background:#f0f9ff; color:#0ea5e9;"><i class="fas fa-broadcast-tower"></i></span>
+          <span>FLOOR SYNC STATUS</span>
+        </div>
+        <div class="stat-value" style="color:#0ea5e9; display:flex; align-items:center; gap:10px;">
+          <span class="pulse-live-dot cyan"></span> LIVE SYNC
+        </div>
+        <div class="stat-desc">
+          <i class="fas fa-wifi" style="color:#0ea5e9; font-size:0.75rem;"></i> Broadcasting to Sister Priya (Staff)
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Doctor Consultation Workspace -->
+    <div style="display:grid; grid-template-columns:1fr 1.3fr; gap:2rem;">
+
+      <!-- Left Column: Active Patient Consultation Card & 10-Min Timer -->
+      <div>
+        <div class="timer-ring-box soft-glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-green" style="font-size:0.8rem;" id="sessionStatusBadge">
+              <i class="fas fa-circle" style="font-size:0.6rem;"></i> IN ACTIVE SESSION
+            </span>
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Room 101 Desk</span>
+          </div>
+
+          <div style="margin:1.5rem 0 1rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">
+              Consultation Countdown (10 Min Protocol)
+            </div>
+            <div class="timer-digital" id="digitalTimerDisplay">10:00</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);" id="timerSubtext">
+              Target duration: 10 mins • Fluctuation adjustments applied
+            </div>
+          </div>
+
+          <!-- Progress Bar for Time Elapsed -->
+          <div style="height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-bottom:1.5rem;">
+            <div id="timerProgressBar" style="width:100%; height:100%; background:linear-gradient(90deg, #10b981, #0ea5e9); transition:width 1s linear;"></div>
+          </div>
+
+          <!-- Active Patient Details Card -->
+          <div style="background:var(--bg-main); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; text-align:left; margin-bottom:1.5rem;" id="activePatientCard">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+              <div>
+                <span class="badge badge-peach" style="font-size:0.85rem; font-weight:800;" id="activeTokenNum">MED-101</span>
+                <span style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-left:6px;" id="activePatientName">Aarav Sharma</span>
+              </div>
+              <span class="badge badge-blue" style="font-size:0.75rem;" id="activeTokenType">APPOINTMENT</span>
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5;">
+              <div><i class="fas fa-notes-medical" style="color:#ef4444; width:16px;"></i> <strong>Chief Complaint:</strong> <span id="activeComplaint">Acute Chest Tightness & Palpitations</span></div>
+              <div><i class="fas fa-map-marker-alt" style="color:#0ea5e9; width:16px;"></i> <strong>Client Location:</strong> <span id="activeLocation">Connaught Place (2.8 km away)</span></div>
+              <div><i class="fas fa-phone-alt" style="color:#10b981; width:16px;"></i> <strong>Phone:</strong> <span id="activePhone">+91 98765 43210</span></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons for Doctor -->
+          <div class="patient-action-btn-group">
+            <button class="btn btn-success" style="flex:1; padding:12px;" onclick="completeConsultationAndCallNext()">
+              <i class="fas fa-check-double"></i> Complete & Call Next
+            </button>
+            <button class="btn btn-secondary" onclick="extendConsultation(5)" title="Extend +5 mins if exam takes longer">
+              <i class="fas fa-plus"></i> +5m
+            </button>
+            <button class="btn btn-outline-primary" onclick="toggleDoctorPriorityForActive()" title="Mark High Priority">
+              <i class="fas fa-star"></i> Priority
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: OPD Waiting Queue & Dynamic Fluctuation To-Do List -->
+      <div>
+        <div style="background:#ffffff; border:1.5px solid var(--border-light); border-radius:var(--radius-lg); padding:1.75rem; box-shadow:var(--shadow-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <div>
+              <h2 style="font-size:1.15rem; font-weight:800; color:var(--text-primary); margin:0;">
+                <i class="fas fa-clipboard-list" style="color:var(--primary);"></i> OPD Calling Order & Queue Roster
+              </h2>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                Order fluctuates dynamically based on doctor time, emergency cases & patient transit delays
+              </div>
+            </div>
+            <span class="badge badge-purple" id="badgeQueueCount">4 Waiting</span>
+          </div>
+
+          <!-- Waiting Patients List -->
+          <div id="doctorQueueList" style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Protocol Reference Note -->
+          <div style="margin-top:1.5rem; background:var(--bg-main); border-radius:var(--radius-md); padding:1rem; border-left:3px solid var(--primary); font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">
+            <strong><i class="fas fa-info-circle"></i> Clinical Dispatch Protocol:</strong>
+            Standard consultation is locked to 10 minutes. If you declare an emergency or extend consultation, the floor staff (Sister Priya Nair) and waiting clients receive real-time EWT postponements automatically.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Declare Emergency Modal -->
+  <div class="modal-backdrop" id="emergencyModal">
+    <div class="modal-card" style="max-width:480px;">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div style="width:52px; height:52px; border-radius:50%; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 0.75rem;">
+          <i class="fas fa-ambulance"></i>
+        </div>
+        <h3 style="font-size:1.3rem; font-weight:800; color:#991b1b; margin-bottom:4px;">
+          Declare Clinical Emergency Override
+        </h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary);">
+          This immediately alerts the floor calling desk and postpones all regular OPD consultations by <strong>+12 minutes</strong>.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nature of Emergency / Critical Diagnosis:</label>
+        <select id="emergencyReasonSelect" class="form-input">
+          <option value="Acute Myocardial Infarction / Cardiac Arrest">Acute Myocardial Infarction / Cardiac Arrest</option>
+          <option value="Severe Polytrauma & Hypovolemic Shock">Severe Polytrauma & Hypovolemic Shock</option>
+          <option value="Acute Respiratory Distress & Oxygen Saturation Drop">Acute Respiratory Distress</option>
+          <option value="Acute Ischemic Stroke / Neurological Emergency">Acute Ischemic Stroke</option>
+          <option value="Other High-Priority Clinical Resuscitation">Other High-Priority Clinical Resuscitation</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1.5rem;">
+        <button type="button" class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="confirmEmergencyDeclaration()">
+          <i class="fas fa-bolt"></i> Broadcast Emergency (+12m)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="formal-footer"></footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    // Guard role: Only DOCTOR and ADMIN allowed
+    let currentUser = null;
+    let timerSecondsRemaining = 600; // 10 minutes default
+    let timerInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initQueueStorage();
+      currentUser = enforceRoleAccess(['DOCTOR', 'ADMIN']);
+      if (!currentUser) return;
+
+      renderUniversalHospitalNav('doctor');
+      renderDynamicFooter();
+      syncDoctorWorkspace();
+
+      // Listen to BroadcastChannel for real-time changes
+      if (typeof BroadcastChannel !== 'undefined' && broadcastChannel) {
+        broadcastChannel.onmessage = (event) => {
+          syncDoctorWorkspace();
+        };
+      }
+
+      startCountdownTimer();
+    });
+
+    function syncDoctorWorkspace() {
+      const state = getHospitalState();
+      const tokens = getTokens();
+      const dynamicQueue = getDynamicHospitalQueue();
+
+      // Sync Emergency Banner
+      const emergencyBanner = document.getElementById('emergencyStatusBanner');
+      const emergencyReasonText = document.getElementById('emergencyBannerReason');
+      if (state.emergencyActive) {
+        emergencyBanner.style.display = 'flex';
+        emergencyReasonText.textContent = `${state.emergencyReason || 'Critical Trauma'} in progress. Regular OPD consultations delayed by +${state.emergencyDelayMins || 12} mins.`;
+        document.getElementById('emergencyToggleBtn').innerHTML = '<i class="fas fa-check"></i> Resolve Emergency';
+        document.getElementById('emergencyToggleBtn').classList.remove('btn-outline-danger');
+        document.getElementById('emergencyToggleBtn').classList.add('btn-success');
+      } else {
+        emergencyBanner.style.display = 'none';
+        document.getElementById('emergencyToggleBtn').innerHTML = '<i class="fas fa-ambulance"></i> Declare Emergency Case';
+        document.getElementById('emergencyToggleBtn').classList.remove('btn-success');
+        document.getElementById('emergencyToggleBtn').classList.add('btn-outline-danger');
+      }
+
+      // Sync Extension Stats
+      const statExt = document.getElementById('statExtensionMins');
+      if (statExt) statExt.textContent = `+${state.doctorExtendedMins || 0} Mins`;
+
+      const statCount = document.getElementById('statPatientsCount');
+      if (statCount) statCount.textContent = tokens.length;
+
+      // Sync Active Patient
+      const currentTokenNum = state.currentPatientToken || 'MED-101';
+      const activeToken = tokens.find(t => t.tokenNumber === currentTokenNum) || tokens[0];
+
+      if (activeToken) {
+        document.getElementById('activeTokenNum').textContent = activeToken.tokenNumber;
+        document.getElementById('activePatientName').textContent = activeToken.userName;
+        document.getElementById('activeTokenType').textContent = activeToken.tokenType;
+        document.getElementById('activeComplaint').textContent = activeToken.perspective || activeToken.serviceName || 'Cardiology Clinical Evaluation';
+        document.getElementById('activeLocation').textContent = activeToken.userLocation || 'Local City (2.5 km away)';
+        document.getElementById('activePhone').textContent = activeToken.userPhone || '+91 98765 43210';
+      }
+
+      // Sync Queue List
+      renderQueueList(dynamicQueue);
+
+      // Maintain subscription & ad-suppression state
+      if (typeof checkDoctorSubscriptionStatus === 'function') {
+        checkDoctorSubscriptionStatus();
+      }
+    }
+
+    function renderQueueList(queue) {
+      const listEl = document.getElementById('doctorQueueList');
+      const badgeCount = document.getElementById('badgeQueueCount');
+      if (!listEl) return;
+
+      if (badgeCount) badgeCount.textContent = `${queue.length} Waiting`;
+
+      if (queue.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center; padding:2rem; color:var(--text-muted);">
+            <i class="fas fa-user-check" style="font-size:2rem; margin-bottom:8px; display:block; color:#10b981;"></i>
+            All OPD patients completed for this slot!
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = queue.map((p, idx) => {
+        const isEmr = p.isEmergency || p.tokenType === 'EMERGENCY';
+        const isPrio = p.isDoctorPriority || p.tokenType === 'PRIORITY';
+        const hasDelay = (p.clientReportedDelayMins || 0) > 0;
+
+        return `
+          <div style="background:${isEmr ? '#fff1f2' : isPrio ? '#fefce8' : '#ffffff'}; border:1px solid ${isEmr ? '#fecdd3' : isPrio ? '#fef08a' : 'var(--border-light)'}; border-radius:var(--radius-md); padding:1rem; display:flex; justify-content:space-between; align-items:center; transition:var(--transition-fast);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:${isEmr ? '#ef4444' : isPrio ? '#eab308' : 'var(--primary-soft)'}; color:${isEmr || isPrio ? '#fff' : 'var(--primary-dark)'}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem;">
+                #${p.queueIndex || (idx + 1)}
+              </div>
+              <div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-weight:700; color:var(--text-primary); font-size:0.92rem;">${p.tokenNumber} — ${p.userName}</span>
+                  ${isEmr ? '<span class="badge badge-peach" style="font-size:0.68rem; background:#ef4444; color:#fff;">EMERGENCY</span>' : ''}
+                  ${isPrio ? '<span class="badge badge-purple" style="font-size:0.68rem;">DOC PRIORITY</span>' : ''}
+                  ${hasDelay ? `<span class="badge" style="background:#fed7aa; color:#9a3412; font-size:0.68rem;"><i class="fas fa-traffic-light"></i> +${p.clientReportedDelayMins}m Traffic</span>` : ''}
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                  <i class="fas fa-location-arrow" style="font-size:0.7rem;"></i> ${p.userLocation || 'Distance ~' + (p.distanceKm || '2.0') + ' km'} • ETA: <strong>${p.estimatedCallTime || 'Next'}</strong> (Wait: ~${p.estWaitMinutes || 0}m)
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button class="btn btn-outline-primary btn-sm" onclick="markPriority('${p.tokenNumber}')" title="Elevate Priority">
+                <i class="fas fa-star"></i>
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="callPatientDirectly('${p.tokenNumber}')" title="Call directly into Room 101">
+                Call Now
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 10-Minute Countdown Timer Logic
+    function startCountdownTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (timerSecondsRemaining > 0) {
+          timerSecondsRemaining--;
+          updateTimerDisplay();
+        } else {
+          // Timer reached 0
+          document.getElementById('digitalTimerDisplay').classList.add('warning');
+          document.getElementById('timerSubtext').innerHTML = '<span style="color:#e11d48; font-weight:700;"><i class="fas fa-exclamation-circle"></i> 10 Mins Exceeded! Click +5m Extension or Complete.</span>';
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerSecondsRemaining / 60);
+      const secs = timerSecondsRemaining % 60;
+      const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      
+      const timerEl = document.getElementById('digitalTimerDisplay');
+      if (timerEl) timerEl.textContent = formatted;
+
+      const progressEl = document.getElementById('timerProgressBar');
+      if (progressEl) {
+        const pct = Math.max(0, Math.min(100, (timerSecondsRemaining / 600) * 100));
+        progressEl.style.width = pct + '%';
+        if (pct < 20) {
+          progressEl.style.background = '#e11d48';
+        } else if (pct < 50) {
+          progressEl.style.background = '#f59e0b';
+        } else {
+          progressEl.style.background = 'linear-gradient(90deg, #10b981, #0ea5e9)';
+        }
+      }
+    }
+
+    function extendConsultation(mins = 5) {
+      extendDoctorConsultation(mins);
+      timerSecondsRemaining += mins * 60;
+      document.getElementById('digitalTimerDisplay').classList.remove('warning');
+      showToast(`Added +${mins} minutes consultation extension. Queue updated!`, 'info');
+      syncDoctorWorkspace();
+    }
+
+    function extendConsultationPrompt() {
+      extendConsultation(5);
+    }
+
+    function toggleEmergencyModal() {
+      const state = getHospitalState();
+      if (state.emergencyActive) {
+        handleEmergencyClear();
+      } else {
+        openModal('emergencyModal');
+      }
+    }
+
+    function closeEmergencyModal() {
+      closeModal('emergencyModal');
+    }
+
+    function confirmEmergencyDeclaration() {
+      const reason = document.getElementById('emergencyReasonSelect').value;
+      triggerHospitalEmergency(reason);
+      closeEmergencyModal();
+      showToast('EMERGENCY DECLARED: +12m delay broadcasted to floor staff & patients', 'warning');
+      syncDoctorWorkspace();
+    }
+
+    function handleEmergencyClear() {
+      clearHospitalEmergency();
+      showToast('Emergency condition resolved. Regular consultation schedule restored.', 'success');
+      syncDoctorWorkspace();
+    }
+
+    function completeConsultationAndCallNext() {
+      playAudioChime();
+      const state = getHospitalState();
+      const dynamicQueue = getDynamicHospitalQueue();
+      const tokens = getTokens();
+
+      // Complete current
+      const currentToken = tokens.find(t => t.tokenNumber === state.currentPatientToken);
+      if (currentToken) {
+        currentToken.status = 'COMPLETED';
+        currentToken.completedAt = new Date().toISOString();
+        saveTokens(tokens);
+      }
+
+      // Next patient
+      if (dynamicQueue.length > 0) {
+        const nextPatient = dynamicQueue[0];
+        state.currentPatientToken = nextPatient.tokenNumber;
+        state.doctorExtendedMins = 0; // Reset extension for new patient
+        saveHospitalState(state);
+
+        nextPatient.status = 'IN_SERVICE';
+        saveTokens(tokens);
+
+        announceToken(nextPatient.tokenNumber, 'OPD Consultation Room 1');
+        showToast(`Consultation completed! Called ${nextPatient.tokenNumber} (${nextPatient.userName}).`, 'success');
+      } else {
+        state.currentPatientToken = null;
+        saveHospitalState(state);
+        showToast('All queued patients completed!', 'success');
+      }
+
+      // Reset timer
+      timerSecondsRemaining = 600;
+      document.getElementById('digitalTimerDisplay').classList.remove('warning');
+      document.getElementById('timerSubtext').textContent = 'Target duration: 10 mins • Fluctuation adjustments applied';
+      syncDoctorWorkspace();
+    }
+
+    function markPriority(tokenNumber) {
+      markDoctorPriority(tokenNumber);
+      showToast(`Doctor Priority assigned to Token ${tokenNumber}! Calling order elevated.`, 'info');
+      syncDoctorWorkspace();
+    }
+
+    function toggleDoctorPriorityForActive() {
+      const state = getHospitalState();
+      if (state.currentPatientToken) {
+        markPriority(state.currentPatientToken);
+      }
+    }
+
+    function callPatientDirectly(tokenNumber) {
+      playAudioChime();
+      announceToken(tokenNumber, 'OPD Consultation Room 1');
+      const state = getHospitalState();
+      state.currentPatientToken = tokenNumber;
+      saveHospitalState(state);
+      timerSecondsRemaining = 600;
+      showToast(`Calling ${tokenNumber} directly into Doctor Room 1...`, 'info');
+      syncDoctorWorkspace();
+    }
+
+    // 10 Doctor Switcher Controller
+    let currentDoctorId = 'doc-1';
+
+    function populateDoctorConsoleSwitcher() {
+      const doctors = getDoctors();
+      const select = document.getElementById('selectActiveDoctorConsole');
+      if (!select) return;
+
+      select.innerHTML = doctors.map(d => `
+        <option value="${d.id}" ${d.id === currentDoctorId ? 'selected' : ''}>
+          ${d.name} (${d.specialty}) • ${d.room}
+        </option>
+      `).join('');
+    }
+
+    function handleDoctorConsoleSwitch() {
+      const docId = document.getElementById('selectActiveDoctorConsole').value;
+      currentDoctorId = docId;
+      const doctors = getDoctors();
+      const doc = doctors.find(d => d.id === docId) || doctors[0];
+
+      document.getElementById('docNameText').textContent = doc.name;
+      document.getElementById('docDepartmentText').innerHTML = `
+        <i class="fas ${doc.icon || 'fa-heartbeat'}" style="color:#ef4444;"></i> ${doc.specialty} • ${doc.room}
+      `;
+      document.getElementById('docAvatarCircle').style.background = doc.avatarBg || '#10b981';
+
+      showToast(`Switched active clinical view to ${doc.name} (${doc.room})`, 'info');
+      syncDoctorWorkspace();
+    }
+
+    function triggerCurrentDoctorQR() {
+      viewDoctorQR(currentDoctorId);
+    }
+
+    // Initialize doctor console switcher & virtual payment status
+    document.addEventListener('DOMContentLoaded', () => {
+      populateDoctorConsoleSwitcher();
+      checkDoctorSubscriptionStatus();
+    });
+
+    /* ==========================================================================
+       Doctor Virtual Payment & Monetization System (Owner Settlement & Ad-Free Logic)
+       ========================================================================== */
+    const VPAY_STORAGE_KEY = 'queueless_doctor_subscription';
+
+    const VPAY_PLANS = {
+      'FREE': {
+        name: 'Normal Standard (Free)',
+        price: 0,
+        gst: 0,
+        total: 0,
+        badge: 'STANDARD FREE',
+        features: ['10-patient roster cap', '10-min countdown timer', 'Floor calling sync'],
+        isPaid: false
+      },
+      'PRO': {
+        name: 'Pro Clinical Suite',
+        price: 1499,
+        gst: 270,
+        total: 1769,
+        badge: 'PRO CLINICIAN',
+        features: ['unlimited-queue', 'transit-radar', 'priority-caller', 'rx-maker'],
+        featureLabels: ['Unlimited OPD Roster', 'GPS Transit Radar', 'Priority Triage Audio', 'Digital Rx Slip Maker'],
+        isPaid: true
+      },
+      'PLATINUM': {
+        name: 'Enterprise Platinum AI Suite',
+        price: 3999,
+        gst: 720,
+        total: 4719,
+        badge: 'PLATINUM VIP',
+        features: ['unlimited-queue', 'ai-copilot', 'whatsapp-alerts', 'transit-radar', 'tele-opd', 'rx-maker'],
+        featureLabels: ['AI Diagnostic Copilot & Scribe', 'Live WhatsApp/SMS Alerts', 'GPS Transit Radar', 'Digital Rx Maker', 'Tele-OPD Bridge', 'VIP Golden Doctor Badge'],
+        isPaid: true
+      }
+    };
+
+    const VPAY_SINGLE_FEATURES = {
+      'ai-copilot': {
+        id: 'ai-copilot',
+        name: 'AI Clinical Diagnostic Copilot & Voice Scribe',
+        price: 499,
+        gst: 90,
+        total: 589,
+        icon: 'fa-brain',
+        desc: 'Instant ICD-10 suggestions, symptom analysis & drug dosage calculator'
+      },
+      'whatsapp-alerts': {
+        id: 'whatsapp-alerts',
+        name: 'Automated WhatsApp & SMS Patient Queue Alerts',
+        price: 399,
+        gst: 72,
+        total: 471,
+        icon: 'fa-whatsapp',
+        desc: '1-click real-time dispatch alerts directly to patient mobile phones'
+      },
+      'transit-radar': {
+        id: 'transit-radar',
+        name: 'Live GPS Patient Transit Radar & Delay Alarms',
+        price: 399,
+        gst: 72,
+        total: 471,
+        icon: 'fa-satellite-dish',
+        desc: 'Track patient distance, ETA, and transit traffic in real time'
+      },
+      'rx-maker': {
+        id: 'rx-maker',
+        name: 'Official Digital Rx Prescription Maker',
+        price: 299,
+        gst: 54,
+        total: 353,
+        icon: 'fa-file-prescription',
+        desc: 'Generate, print & save official hospital prescription slips with doctor stamp'
+      }
+    };
+
+    function getDoctorSubscription() {
+      try {
+        const raw = localStorage.getItem(VPAY_STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.error('Error reading subscription', e);
+      }
+      return {
+        plan: 'FREE',
+        activeFeatures: [],
+        purchasedItemType: 'NONE', // 'TIER' or 'SINGLE'
+        purchasedItemKey: 'FREE',
+        isSubscribed: false,
+        adFree: false,
+        txnId: null,
+        paidDate: null,
+        ownerAccount: 'OWNER-QL-ADMIN-99 (QueueLess Platform Owner)',
+        ownerUpi: 'queueless.owner@hdfcbank'
+      };
+    }
+
+    function saveDoctorSubscription(sub) {
+      localStorage.setItem(VPAY_STORAGE_KEY, JSON.stringify(sub));
+      checkDoctorSubscriptionStatus();
+    }
+
+    function checkDoctorSubscriptionStatus() {
+      const sub = getDoctorSubscription();
+      const isSubscribed = (sub.plan === 'PRO' || sub.plan === 'PLATINUM' || (sub.activeFeatures && sub.activeFeatures.length > 0));
+
+      const adBanner = document.getElementById('vpayDoctorAdBanner');
+      const licenseBar = document.getElementById('vpayActiveLicenseBar');
+      const badgeText = document.getElementById('docBadgeText');
+      const headerUpgradeBtn = document.getElementById('btnHeaderUpgrade');
+
+      // CRITICAL REQUIREMENT: If ANY plan or ANY single feature is purchased, NO ADS / PROMOTIONS ARE SHOWN!
+      if (isSubscribed) {
+        if (adBanner) adBanner.style.display = 'none'; // Ad suppressed permanently!
+        if (licenseBar) licenseBar.style.display = 'flex'; // Clean verified license bar shown
+
+        let planTitle = 'VERIFIED DOCTOR LICENSE';
+        if (sub.plan === 'PLATINUM') planTitle = 'ENTERPRISE PLATINUM AI SUITE';
+        else if (sub.plan === 'PRO') planTitle = 'PRO CLINICAL SUITE';
+        else if (sub.purchasedItemType === 'SINGLE' && VPAY_SINGLE_FEATURES[sub.purchasedItemKey]) {
+          planTitle = 'SINGLE FEATURE: ' + VPAY_SINGLE_FEATURES[sub.purchasedItemKey].name.toUpperCase();
+        }
+
+        const planBadge = document.getElementById('activePlanTitleBadge');
+        if (planBadge) planBadge.textContent = planTitle;
+
+        const receiptCode = document.getElementById('activeReceiptCode');
+        if (receiptCode) receiptCode.textContent = sub.txnId || 'TXN-QL-884920';
+
+        const docName = document.getElementById('licensedDoctorName');
+        const activeDocName = document.getElementById('docNameText');
+        if (docName && activeDocName) docName.textContent = activeDocName.textContent;
+
+        if (badgeText) {
+          if (sub.plan === 'PLATINUM') {
+            badgeText.innerHTML = '<i class="fas fa-crown" style="color:#fde047;"></i> PLATINUM VIP DOCTOR';
+            badgeText.style.background = 'linear-gradient(135deg, #d97706, #b45309)';
+          } else if (sub.plan === 'PRO') {
+            badgeText.innerHTML = '<i class="fas fa-shield-alt"></i> PRO CLINICIAN';
+            badgeText.style.background = '#2563eb';
+          } else {
+            badgeText.innerHTML = '<i class="fas fa-check-circle"></i> LICENSED SPECIALIST';
+            badgeText.style.background = '#7c3aed';
+          }
+        }
+
+        if (headerUpgradeBtn) {
+          headerUpgradeBtn.innerHTML = '<i class="fas fa-check-double"></i> Plan Active';
+          headerUpgradeBtn.classList.remove('btn-warning');
+          headerUpgradeBtn.classList.add('btn-success');
+          headerUpgradeBtn.style.background = '#059669';
+        }
+      } else {
+        // Free tier -> Promotional banner visible
+        if (adBanner) adBanner.style.display = 'flex';
+        if (licenseBar) licenseBar.style.display = 'none';
+
+        if (badgeText) {
+          badgeText.innerHTML = 'CHIEF CONSULTANT (STANDARD)';
+          badgeText.style.background = '#10b981';
+        }
+
+        if (headerUpgradeBtn) {
+          headerUpgradeBtn.innerHTML = '<i class="fas fa-crown"></i> Platform Subscription';
+          headerUpgradeBtn.classList.add('btn-warning');
+          headerUpgradeBtn.classList.remove('btn-success');
+          headerUpgradeBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+        }
+      }
+
+      updateFeatureButtonsState(sub);
+    }
+
+    function updateFeatureButtonsState(sub) {
+      const isFeatureActive = (feat) => {
+        if (sub.plan === 'PLATINUM') return true;
+        if (sub.plan === 'PRO' && feat !== 'ai-copilot') return true;
+        return sub.activeFeatures && sub.activeFeatures.includes(feat);
+      };
+
+      const btnAi = document.getElementById('btnAiCopilot');
+      if (btnAi) {
+        if (isFeatureActive('ai-copilot')) {
+          btnAi.innerHTML = '<i class="fas fa-brain"></i> AI Diagnostic Copilot <span class="badge" style="background:#7c3aed; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">ACTIVE</span>';
+          btnAi.style.border = '2px solid #7c3aed';
+        } else {
+          btnAi.innerHTML = '<i class="fas fa-brain"></i> AI Diagnostic Copilot <span class="badge" style="background:#94a3b8; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">₹499/m</span>';
+          btnAi.style.border = '1px solid #cbd5e1';
+        }
+      }
+
+      const btnWa = document.getElementById('btnWhatsAppAlert');
+      if (btnWa) {
+        if (isFeatureActive('whatsapp-alerts')) {
+          btnWa.innerHTML = '<i class="fab fa-whatsapp"></i> Live Patient WhatsApp Alert <span class="badge" style="background:#059669; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">ACTIVE</span>';
+          btnWa.style.border = '2px solid #059669';
+        } else {
+          btnWa.innerHTML = '<i class="fab fa-whatsapp"></i> Live Patient WhatsApp Alert <span class="badge" style="background:#94a3b8; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">₹399/m</span>';
+          btnWa.style.border = '1px solid #cbd5e1';
+        }
+      }
+
+      const btnRadar = document.getElementById('btnTransitRadar');
+      if (btnRadar) {
+        if (isFeatureActive('transit-radar')) {
+          btnRadar.innerHTML = '<i class="fas fa-satellite-dish"></i> GPS Transit Radar <span class="badge" style="background:#0284c7; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">ACTIVE</span>';
+          btnRadar.style.border = '2px solid #0284c7';
+        } else {
+          btnRadar.innerHTML = '<i class="fas fa-satellite-dish"></i> GPS Transit Radar <span class="badge" style="background:#94a3b8; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">₹399/m</span>';
+          btnRadar.style.border = '1px solid #cbd5e1';
+        }
+      }
+
+      const btnRx = document.getElementById('btnRxMaker');
+      if (btnRx) {
+        if (isFeatureActive('rx-maker')) {
+          btnRx.innerHTML = '<i class="fas fa-file-prescription"></i> Digital Rx Maker <span class="badge" style="background:#d97706; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">ACTIVE</span>';
+          btnRx.style.border = '2px solid #d97706';
+        } else {
+          btnRx.innerHTML = '<i class="fas fa-file-prescription"></i> Digital Rx Maker <span class="badge" style="background:#94a3b8; color:#fff; font-size:0.6rem; padding:1px 5px; margin-left:4px;">₹299/m</span>';
+          btnRx.style.border = '1px solid #cbd5e1';
+        }
+      }
+    }
+
+    // Modal & Payment Controllers
+    let selectedCheckoutMode = 'TIER'; // 'TIER' or 'SINGLE'
+    let selectedCheckoutItemKey = 'PLATINUM';
+    let selectedPaymentMethod = 'UPI';
+
+    function openDoctorPaymentModal(target = 'PLATINUM') {
+      const modal = document.getElementById('vpayCheckoutModal');
+      if (!modal) return;
+
+      if (target === 'SINGLE' || VPAY_SINGLE_FEATURES[target]) {
+        selectedCheckoutMode = 'SINGLE';
+        selectedCheckoutItemKey = VPAY_SINGLE_FEATURES[target] ? target : 'ai-copilot';
+        switchVpayTab('single');
+      } else {
+        selectedCheckoutMode = 'TIER';
+        selectedCheckoutItemKey = target === 'PRO' ? 'PRO' : 'PLATINUM';
+        switchVpayTab('tier');
+      }
+
+      updateCheckoutBreakdown();
+      modal.style.display = 'flex';
+    }
+
+    function closeDoctorPaymentModal() {
+      const modal = document.getElementById('vpayCheckoutModal');
+      if (modal) modal.style.display = 'none';
+      const overlay = document.getElementById('vpayProcessingOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    function switchVpayTab(tab) {
+      const tabTier = document.getElementById('vpayTabBtnTier');
+      const tabSingle = document.getElementById('vpayTabBtnSingle');
+      const secTier = document.getElementById('vpaySectionTiers');
+      const secSingle = document.getElementById('vpaySectionSingles');
+
+      if (tab === 'tier') {
+        selectedCheckoutMode = 'TIER';
+        if (selectedCheckoutItemKey !== 'PRO' && selectedCheckoutItemKey !== 'PLATINUM') {
+          selectedCheckoutItemKey = 'PLATINUM';
+        }
+        tabTier.classList.add('active');
+        tabSingle.classList.remove('active');
+        tabTier.style.background = '#4f8fcb'; tabTier.style.color = '#fff';
+        tabSingle.style.background = '#f1f5f9'; tabSingle.style.color = '#475569';
+        secTier.style.display = 'grid';
+        secSingle.style.display = 'none';
+      } else {
+        selectedCheckoutMode = 'SINGLE';
+        if (!VPAY_SINGLE_FEATURES[selectedCheckoutItemKey]) {
+          selectedCheckoutItemKey = 'ai-copilot';
+        }
+        tabSingle.classList.add('active');
+        tabTier.classList.remove('active');
+        tabSingle.style.background = '#4f8fcb'; tabSingle.style.color = '#fff';
+        tabTier.style.background = '#f1f5f9'; tabTier.style.color = '#475569';
+        secSingle.style.display = 'grid';
+        secTier.style.display = 'none';
+      }
+      updateCheckoutBreakdown();
+    }
+
+    function selectTierCard(tierKey) {
+      selectedCheckoutMode = 'TIER';
+      selectedCheckoutItemKey = tierKey;
+      document.querySelectorAll('.vpay-tier-choice-card').forEach(el => el.classList.remove('selected'));
+      const card = document.getElementById(`tierCard_${tierKey}`);
+      if (card) card.classList.add('selected');
+      updateCheckoutBreakdown();
+    }
+
+    function selectSingleFeatureCard(featKey) {
+      selectedCheckoutMode = 'SINGLE';
+      selectedCheckoutItemKey = featKey;
+      document.querySelectorAll('.vpay-single-choice-card').forEach(el => el.classList.remove('selected'));
+      const card = document.getElementById(`singleCard_${featKey}`);
+      if (card) card.classList.add('selected');
+      updateCheckoutBreakdown();
+    }
+
+    function selectPaymentMethod(methodKey) {
+      selectedPaymentMethod = methodKey;
+      document.querySelectorAll('.vpay-method-pill').forEach(el => el.classList.remove('active'));
+      const btn = document.getElementById(`vpayMethod_${methodKey}`);
+      if (btn) btn.classList.add('active');
+
+      document.getElementById('vpayMethodView_UPI').style.display = methodKey === 'UPI' ? 'block' : 'none';
+      document.getElementById('vpayMethodView_CARD').style.display = methodKey === 'CARD' ? 'block' : 'none';
+      document.getElementById('vpayMethodView_NETBANK').style.display = methodKey === 'NETBANK' ? 'block' : 'none';
+    }
+
+    function updateCheckoutBreakdown() {
+      let itemName = '';
+      let price = 0;
+      let gst = 0;
+      let total = 0;
+
+      if (selectedCheckoutMode === 'TIER') {
+        const item = VPAY_PLANS[selectedCheckoutItemKey] || VPAY_PLANS['PLATINUM'];
+        itemName = item.name;
+        price = item.price;
+        gst = item.gst;
+        total = item.total;
+      } else {
+        const item = VPAY_SINGLE_FEATURES[selectedCheckoutItemKey] || VPAY_SINGLE_FEATURES['ai-copilot'];
+        itemName = 'Single Feature: ' + item.name;
+        price = item.price;
+        gst = item.gst;
+        total = item.total;
+      }
+
+      const nameEl = document.getElementById('checkoutSummaryItemName');
+      const priceEl = document.getElementById('checkoutSummaryPrice');
+      const gstEl = document.getElementById('checkoutSummaryGST');
+      const totalEl = document.getElementById('checkoutSummaryTotal');
+      const btnPay = document.getElementById('btnConfirmVirtualPay');
+
+      if (nameEl) nameEl.textContent = itemName;
+      if (priceEl) priceEl.textContent = `₹${price}`;
+      if (gstEl) gstEl.textContent = `₹${gst} (18% GST)`;
+      if (totalEl) totalEl.textContent = `₹${total}`;
+      if (btnPay) btnPay.innerHTML = `<i class="fas fa-lock"></i> Authorize Payment of ₹${total} to Platform Owner`;
+    }
+
+    function processVirtualPaymentToOwner() {
+      const overlay = document.getElementById('vpayProcessingOverlay');
+      const statusText = document.getElementById('vpayProcessingStatusText');
+      if (overlay) overlay.style.display = 'flex';
+
+      const steps = [
+        'Connecting to QueueLess Platform Owner Bank Switch...',
+        'Routing virtual payment to Owner ID: OWNER-QL-ADMIN-99...',
+        '256-bit SSL Signature Verified with Platform Vault...',
+        'Generating Verified Doctor License & Receipt...'
+      ];
+
+      let stepIdx = 0;
+      const interval = setInterval(() => {
+        if (stepIdx < steps.length) {
+          if (statusText) statusText.textContent = steps[stepIdx];
+          stepIdx++;
+        } else {
+          clearInterval(interval);
+          completePaymentSuccess();
+        }
+      }, 400);
+    }
+
+    function completePaymentSuccess() {
+      const currentSub = getDoctorSubscription();
+      const generatedTxn = 'TXN-QL-' + Math.floor(100000 + Math.random() * 900000);
+      const paidTimestamp = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+      let newPlan = currentSub.plan;
+      let newFeatures = [...(currentSub.activeFeatures || [])];
+
+      if (selectedCheckoutMode === 'TIER') {
+        newPlan = selectedCheckoutItemKey;
+        if (newPlan === 'PLATINUM') {
+          newFeatures = ['unlimited-queue', 'ai-copilot', 'whatsapp-alerts', 'transit-radar', 'tele-opd', 'rx-maker'];
+        } else if (newPlan === 'PRO') {
+          newFeatures = ['unlimited-queue', 'transit-radar', 'priority-caller', 'rx-maker'];
+        }
+      } else {
+        // Single feature purchase
+        if (!newFeatures.includes(selectedCheckoutItemKey)) {
+          newFeatures.push(selectedCheckoutItemKey);
+        }
+      }
+
+      const updatedSub = {
+        plan: newPlan,
+        activeFeatures: newFeatures,
+        purchasedItemType: selectedCheckoutMode,
+        purchasedItemKey: selectedCheckoutItemKey,
+        isSubscribed: true,
+        adFree: true, // CRITICAL: Guarantees ad suppression
+        txnId: generatedTxn,
+        paidDate: paidTimestamp,
+        ownerAccount: 'QueueLess HealthTech Platform Owner Account (QL-OWNER-PAY-01)',
+        ownerUpi: 'queueless.owner@hdfcbank'
+      };
+
+      saveDoctorSubscription(updatedSub);
+      playAudioChime();
+      closeDoctorPaymentModal();
+
+      showToast(`Payment Approved by Platform Owner! License ${generatedTxn} Active & Ad-Free Experience Enabled.`, 'success');
+      viewOwnerPaymentReceipt();
+    }
+
+    function resetDoctorSubscription() {
+      if (confirm('Reset doctor subscription to Standard Free Tier? This will re-enable promotional notices for demo purposes.')) {
+        localStorage.removeItem(VPAY_STORAGE_KEY);
+        checkDoctorSubscriptionStatus();
+        showToast('Subscription reset to Standard Free tier.', 'info');
+      }
+    }
+
+    function viewOwnerPaymentReceipt() {
+      try {
+        const sub = getDoctorSubscription();
+        const modal = document.getElementById('vpayReceiptModal');
+        if (!modal) return;
+
+        const docEl = document.getElementById('docNameText');
+        const activeDoc = docEl ? docEl.textContent : 'Dr. Sarah Mehta, MD';
+        const rDoc = document.getElementById('receiptDocName');
+        if (rDoc) rDoc.textContent = activeDoc;
+        const rTxn = document.getElementById('receiptTxnId');
+        if (rTxn) rTxn.textContent = sub.txnId || 'TXN-QL-884920';
+        const rDate = document.getElementById('receiptDate');
+        if (rDate) rDate.textContent = sub.paidDate || new Date().toLocaleDateString('en-IN');
+        const rBen = document.getElementById('receiptBeneficiary');
+        if (rBen) rBen.textContent = sub.ownerAccount || 'QueueLess Platform Owner';
+        const rUpi = document.getElementById('receiptBeneficiaryUpi');
+        if (rUpi) rUpi.textContent = sub.ownerUpi || 'queueless.owner@hdfcbank';
+
+        let planName = 'Enterprise Platinum AI Suite';
+        let amount = 3999;
+        let gst = 720;
+        let total = 4719;
+
+        if (sub.purchasedItemType === 'SINGLE' && VPAY_SINGLE_FEATURES[sub.purchasedItemKey]) {
+          const item = VPAY_SINGLE_FEATURES[sub.purchasedItemKey];
+          planName = 'Single Feature License: ' + item.name;
+          amount = item.price;
+          gst = item.gst;
+          total = item.total;
+        } else if (sub.plan === 'PRO') {
+          planName = 'Pro Clinical Suite';
+          amount = 1499;
+          gst = 270;
+          total = 1769;
+        }
+
+        const pName = document.getElementById('receiptPlanName');
+        if (pName) pName.textContent = planName;
+        const pAmt = document.getElementById('receiptAmount');
+        if (pAmt) pAmt.textContent = `₹${amount}`;
+        const pGst = document.getElementById('receiptGst');
+        if (pGst) pGst.textContent = `₹${gst}`;
+        const pTot = document.getElementById('receiptTotal');
+        if (pTot) pTot.textContent = `₹${total}`;
+
+        modal.style.display = 'flex';
+      } catch (e) {
+        console.error('viewOwnerPaymentReceipt error', e);
+      }
+    }
+
+    function closeOwnerPaymentReceipt() {
+      const modal = document.getElementById('vpayReceiptModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function printOwnerReceipt() {
+      window.print();
+    }
+
+    // Power Tools Trigger Handlers
+    function handleAiCopilotClick() {
+      const sub = getDoctorSubscription();
+      const isUnlocked = sub.plan === 'PLATINUM' || (sub.activeFeatures && sub.activeFeatures.includes('ai-copilot'));
+      if (!isUnlocked) {
+        if (confirm('AI Clinical Diagnostic Copilot is a Premium Feature. Unlock now for ₹499/mo to Platform Owner? (Ad-free experience guaranteed!)')) {
+          openDoctorPaymentModal('ai-copilot');
+        }
+        return;
+      }
+      openAiCopilotModal();
+    }
+
+    function handleWhatsAppAlertClick() {
+      const sub = getDoctorSubscription();
+      const isUnlocked = sub.plan === 'PLATINUM' || (sub.activeFeatures && sub.activeFeatures.includes('whatsapp-alerts'));
+      if (!isUnlocked) {
+        if (confirm('WhatsApp Patient Queue Alerts is a Premium Feature. Unlock now for ₹399/mo to Platform Owner? (Ad-free experience guaranteed!)')) {
+          openDoctorPaymentModal('whatsapp-alerts');
+        }
+        return;
+      }
+      openWhatsAppAlertModal();
+    }
+
+    function handleTransitRadarClick() {
+      const sub = getDoctorSubscription();
+      const isUnlocked = sub.plan === 'PLATINUM' || sub.plan === 'PRO' || (sub.activeFeatures && sub.activeFeatures.includes('transit-radar'));
+      if (!isUnlocked) {
+        if (confirm('Live GPS Patient Transit Radar is a Pro Feature. Unlock now for ₹399/mo to Platform Owner?')) {
+          openDoctorPaymentModal('transit-radar');
+        }
+        return;
+      }
+      openTransitRadarModal();
+    }
+
+    function handleRxMakerClick() {
+      const sub = getDoctorSubscription();
+      const isUnlocked = sub.plan === 'PLATINUM' || sub.plan === 'PRO' || (sub.activeFeatures && sub.activeFeatures.includes('rx-maker'));
+      if (!isUnlocked) {
+        if (confirm('Digital Rx Prescription Maker is a Pro Feature. Unlock now for ₹299/mo to Platform Owner?')) {
+          openDoctorPaymentModal('rx-maker');
+        }
+        return;
+      }
+      openRxMakerModal();
+    }
+
+    // Specific Power Tool Modals
+    function openAiCopilotModal() {
+      const modal = document.getElementById('aiCopilotModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeAiCopilotModal() {
+      const modal = document.getElementById('aiCopilotModal');
+      if (modal) modal.style.display = 'none';
+    }
+    function runAiDiagnosisSimulation() {
+      const resultDiv = document.getElementById('aiCopilotResult');
+      resultDiv.innerHTML = `
+        <div style="text-align:center; padding:1.5rem; color:#7c3aed;">
+          <i class="fas fa-spinner fa-spin" style="font-size:1.8rem; margin-bottom:8px;"></i>
+          <div>Analyzing clinical symptomology with Deep Clinical AI Core...</div>
+        </div>
+      `;
+      setTimeout(() => {
+        resultDiv.innerHTML = `
+          <div style="background:#f5f3ff; border:1.5px solid #ddd6fe; border-radius:12px; padding:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+              <strong style="color:#5b21b6; font-size:0.95rem;"><i class="fas fa-clipboard-check"></i> AI Clinical Impression (ICD-10):</strong>
+              <span class="badge" style="background:#7c3aed; color:#fff; font-size:0.72rem;">Confidence 96.4%</span>
+            </div>
+            <div style="font-size:0.85rem; color:#374151; line-height:1.5;">
+              <div><strong>Primary Consideration:</strong> I20.9 — Angina Pectoris / Acute Coronary Syndrome workup needed.</div>
+              <div><strong>Secondary Differential:</strong> R00.2 — Sinus Tachycardia with Stress Fluctuation.</div>
+              <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #c4b5fd;">
+                <strong>Recommended Diagnostic Protocol:</strong> Immediate 12-lead ECG, Serum Troponin-T STAT, Bedside 2D Echo.
+              </div>
+              <div style="margin-top:6px; color:#065f46; font-weight:600;">
+                <i class="fas fa-pills"></i> First-Line Support: Tab. Sorbitrate 5mg SL STAT (if BP > 100), Tab. Aspirin 300mg chewable.
+              </div>
+            </div>
+          </div>
+        `;
+      }, 700);
+    }
+
+    function openWhatsAppAlertModal() {
+      const modal = document.getElementById('whatsAppAlertModal');
+      const activePatientName = document.getElementById('activePatientName').textContent;
+      const activeToken = document.getElementById('activeTokenNum').textContent;
+      document.getElementById('waPatientNamePreview').textContent = activePatientName;
+      document.getElementById('waTokenPreview').textContent = activeToken;
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeWhatsAppAlertModal() {
+      const modal = document.getElementById('whatsAppAlertModal');
+      if (modal) modal.style.display = 'none';
+    }
+    function sendSimulatedWhatsAppAlert() {
+      playAudioChime();
+      closeWhatsAppAlertModal();
+      showToast('Live WhatsApp & SMS Queue ETA alert dispatched directly to patient phone!', 'success');
+    }
+
+    function openTransitRadarModal() {
+      const modal = document.getElementById('transitRadarModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeTransitRadarModal() {
+      const modal = document.getElementById('transitRadarModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function openRxMakerModal() {
+      const modal = document.getElementById('rxMakerModal');
+      const activePatientName = document.getElementById('activePatientName').textContent;
+      const activeDocName = document.getElementById('docNameText').textContent;
+      document.getElementById('rxDoctorHeading').textContent = activeDocName;
+      document.getElementById('rxPatientHeading').textContent = activePatientName;
+      document.getElementById('rxDateHeading').textContent = new Date().toLocaleDateString('en-IN');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeRxMakerModal() {
+      const modal = document.getElementById('rxMakerModal');
+      if (modal) modal.style.display = 'none';
+    }
+  </script>
+
+
+  <!-- ==========================================================================
+       VIRTUAL PAYMENT CHECKOUT MODAL (QueueLess Virtual Pay™ — Pay to Platform Owner)
+       ========================================================================== -->
+  <div id="vpayCheckoutModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container">
+      
+      <!-- Modal Header -->
+      <div style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#fff; padding:1.5rem 2rem; border-top-left-radius:20px; border-top-right-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-shield-alt" style="color:#10b981; font-size:1.4rem;"></i>
+            <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:800; letter-spacing:0.5px;">QueueLess Virtual Pay™</h3>
+            <span class="badge" style="background:#10b981; color:#fff; font-size:0.7rem;">OWNER GATEWAY</span>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">
+            Direct Settlement to Platform Owner: <strong>QueueLess Health Technologies Pvt Ltd</strong> • Owner UPI: <code>queueless.owner@hdfcbank</code>
+          </div>
+        </div>
+        <button onclick="closeDoctorPaymentModal()" style="background:transparent; border:none; color:#cbd5e1; font-size:1.5rem; cursor:pointer;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div style="padding:1.75rem 2rem;">
+        
+        <!-- Toggle Tabs: Full Package Tier vs. Single Individual Feature -->
+        <div style="display:flex; gap:10px; background:#f1f5f9; padding:5px; border-radius:12px; margin-bottom:1.5rem;">
+          <button id="vpayTabBtnTier" class="btn btn-sm active" style="flex:1; border-radius:8px; font-weight:700; background:#4f8fcb; color:#fff;" onclick="switchVpayTab('tier')">
+            <i class="fas fa-layer-group"></i> Full Subscription Packages
+          </button>
+          <button id="vpayTabBtnSingle" class="btn btn-sm" style="flex:1; border-radius:8px; font-weight:700; background:#f1f5f9; color:#475569;" onclick="switchVpayTab('single')">
+            <i class="fas fa-puzzle-piece"></i> Buy Single Individual Feature (Guaranteed Ad-Free!)
+          </button>
+        </div>
+
+        <!-- Section 1: Full Packages -->
+        <div id="vpaySectionTiers" class="vpay-tier-grid" style="display:grid;">
+          
+          <!-- Free Normal -->
+          <div id="tierCard_FREE" class="vpay-tier-card vpay-tier-choice-card" onclick="selectTierCard('FREE')">
+            <div>
+              <span class="badge" style="background:#e2e8f0; color:#475569; font-size:0.7rem; font-weight:700;">BASIC</span>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.15rem; margin:8px 0 4px; font-weight:800;">Normal Standard</h4>
+              <div style="font-size:1.4rem; font-weight:800; color:#334155;">₹0 <span style="font-size:0.8rem; color:#94a3b8; font-weight:500;">/ mo</span></div>
+              <ul style="font-size:0.8rem; color:#64748b; margin-top:10px; padding-left:1.2rem; line-height:1.6;">
+                <li>10-patient roster limit</li>
+                <li>Standard 10-min countdown</li>
+                <li>Manual Sister Priya desk sync</li>
+                <li style="color:#ef4444;"><i class="fas fa-ad"></i> Contains Upgrade Banners</li>
+              </ul>
+            </div>
+            <div style="margin-top:1rem; font-size:0.75rem; color:#94a3b8; text-align:center;">Currently Baseline</div>
+          </div>
+
+          <!-- Pro Tier -->
+          <div id="tierCard_PRO" class="vpay-tier-card vpay-tier-choice-card" onclick="selectTierCard('PRO')">
+            <div>
+              <span class="badge" style="background:#2563eb; color:#fff; font-size:0.7rem; font-weight:700;">PRO CLINIC</span>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.15rem; margin:8px 0 4px; font-weight:800;">Pro Clinical Suite</h4>
+              <div style="font-size:1.4rem; font-weight:800; color:#2563eb;">₹1,499 <span style="font-size:0.8rem; color:#94a3b8; font-weight:500;">/ mo</span></div>
+              <ul style="font-size:0.8rem; color:#334155; margin-top:10px; padding-left:1.2rem; line-height:1.6;">
+                <li><strong>Unlimited OPD Queue Capacity</strong></li>
+                <li><strong>GPS Transit Radar & ETA Delay</strong></li>
+                <li><strong>Priority Triage Calling Chime</strong></li>
+                <li><strong>Digital Rx Prescription Maker</strong></li>
+                <li style="color:#10b981; font-weight:700;"><i class="fas fa-ban"></i> 100% Ad-Free Clinical Console</li>
+              </ul>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" style="margin-top:1rem; width:100%;">Select Pro</button>
+          </div>
+
+          <!-- Platinum AI Tier -->
+          <div id="tierCard_PLATINUM" class="vpay-tier-card vpay-tier-choice-card selected featured" onclick="selectTierCard('PLATINUM')">
+            <span class="vpay-badge-popular"><i class="fas fa-crown"></i> OWNER RECOMMENDED</span>
+            <div>
+              <span class="badge" style="background:linear-gradient(135deg, #7c3aed, #4f46e5); color:#fff; font-size:0.7rem; font-weight:700;">PLATINUM AI</span>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.15rem; margin:8px 0 4px; font-weight:800;">Enterprise Platinum AI</h4>
+              <div style="font-size:1.4rem; font-weight:800; color:#7c3aed;">₹3,999 <span style="font-size:0.8rem; color:#94a3b8; font-weight:500;">/ mo</span></div>
+              <ul style="font-size:0.8rem; color:#334155; margin-top:10px; padding-left:1.2rem; line-height:1.6;">
+                <li><strong>All Pro Features Included</strong></li>
+                <li><strong>AI Diagnostic Copilot & Scribe</strong></li>
+                <li><strong>Direct WhatsApp & SMS Patient Alerts</strong></li>
+                <li><strong>Tele-OPD Virtual Room Bridge</strong></li>
+                <li><strong>Golden VIP Doctor Profile Badge</strong></li>
+                <li style="color:#10b981; font-weight:700;"><i class="fas fa-ban"></i> 100% Ad-Free VIP Console</li>
+              </ul>
+            </div>
+            <button class="btn btn-sm" style="background:#7c3aed; color:#fff; font-weight:700; margin-top:1rem; width:100%;">Selected Platinum</button>
+          </div>
+
+        </div>
+
+        <!-- Section 2: Single Individual Features (Guaranteed Ad Suppression) -->
+        <div id="vpaySectionSingles" class="vpay-tier-grid" style="display:none;">
+          
+          <div id="singleCard_ai-copilot" class="vpay-tier-card vpay-single-choice-card selected" onclick="selectSingleFeatureCard('ai-copilot')">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" style="background:#ede9fe; color:#6d28d9; font-size:0.7rem; font-weight:800;"><i class="fas fa-brain"></i> AI COPILOT</span>
+                <span style="font-weight:800; color:#6d28d9;">₹499/mo</span>
+              </div>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.05rem; margin:8px 0 4px; font-weight:800;">AI Consultation Copilot</h4>
+              <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">Instant ICD-10 suggestions, clinical impression, differential diagnosis & drug protocols.</p>
+              <div style="font-size:0.75rem; color:#10b981; font-weight:700; margin-top:6px;">
+                <i class="fas fa-shield-check"></i> Unlocks feature + removes all advertisements!
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" style="margin-top:1rem; width:100%;">Select Feature</button>
+          </div>
+
+          <div id="singleCard_whatsapp-alerts" class="vpay-tier-card vpay-single-choice-card" onclick="selectSingleFeatureCard('whatsapp-alerts')">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" style="background:#ecfdf5; color:#065f46; font-size:0.7rem; font-weight:800;"><i class="fab fa-whatsapp"></i> WHATSAPP</span>
+                <span style="font-weight:800; color:#065f46;">₹399/mo</span>
+              </div>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.05rem; margin:8px 0 4px; font-weight:800;">WhatsApp Patient Alerts</h4>
+              <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">Send live countdown & room calling alerts directly to patient mobile phones.</p>
+              <div style="font-size:0.75rem; color:#10b981; font-weight:700; margin-top:6px;">
+                <i class="fas fa-shield-check"></i> Unlocks feature + removes all advertisements!
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" style="margin-top:1rem; width:100%;">Select Feature</button>
+          </div>
+
+          <div id="singleCard_transit-radar" class="vpay-tier-card vpay-single-choice-card" onclick="selectSingleFeatureCard('transit-radar')">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" style="background:#f0f9ff; color:#0369a1; font-size:0.7rem; font-weight:800;"><i class="fas fa-satellite-dish"></i> GPS RADAR</span>
+                <span style="font-weight:800; color:#0369a1;">₹399/mo</span>
+              </div>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.05rem; margin:8px 0 4px; font-weight:800;">GPS Transit Radar</h4>
+              <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">Real-time GPS tracker showing patient travel distance, vehicle mode & traffic delay.</p>
+              <div style="font-size:0.75rem; color:#10b981; font-weight:700; margin-top:6px;">
+                <i class="fas fa-shield-check"></i> Unlocks feature + removes all advertisements!
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" style="margin-top:1rem; width:100%;">Select Feature</button>
+          </div>
+
+          <div id="singleCard_rx-maker" class="vpay-tier-card vpay-single-choice-card" onclick="selectSingleFeatureCard('rx-maker')">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" style="background:#fffbeb; color:#92400e; font-size:0.7rem; font-weight:800;"><i class="fas fa-file-prescription"></i> RX MAKER</span>
+                <span style="font-weight:800; color:#92400e;">₹299/mo</span>
+              </div>
+              <h4 style="font-family:'Outfit',sans-serif; font-size:1.05rem; margin:8px 0 4px; font-weight:800;">Digital Rx Maker</h4>
+              <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">Generate official doctor prescription slips with hospital letterhead and print/save PDF.</p>
+              <div style="font-size:0.75rem; color:#10b981; font-weight:700; margin-top:6px;">
+                <i class="fas fa-shield-check"></i> Unlocks feature + removes all advertisements!
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" style="margin-top:1rem; width:100%;">Select Feature</button>
+          </div>
+
+        </div>
+
+        <!-- Virtual Payment Methods -->
+        <div style="margin-top:1.5rem; padding-top:1.25rem; border-top:1.5px solid #e2e8f0;">
+          <label style="font-size:0.85rem; font-weight:800; color:#1e293b; display:block; margin-bottom:10px;">
+            <i class="fas fa-credit-card" style="color:var(--primary);"></i> Select Virtual Payment Method (Settlement to Website Owner):
+          </label>
+          
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1.25rem;">
+            <div id="vpayMethod_UPI" class="vpay-method-pill active" onclick="selectPaymentMethod('UPI')">
+              <i class="fas fa-qrcode" style="color:#0ea5e9;"></i> UPI / QR Code (GPay, PhonePe, Paytm)
+            </div>
+            <div id="vpayMethod_CARD" class="vpay-method-pill" onclick="selectPaymentMethod('CARD')">
+              <i class="fas fa-credit-card" style="color:#7c3aed;"></i> Debit / Credit Card
+            </div>
+            <div id="vpayMethod_NETBANK" class="vpay-method-pill" onclick="selectPaymentMethod('NETBANK')">
+              <i class="fas fa-university" style="color:#10b981;"></i> Net Banking (HDFC, ICICI, SBI)
+            </div>
+          </div>
+
+          <!-- Method 1: UPI Simulator -->
+          <div id="vpayMethodView_UPI" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; margin-bottom:1.25rem;">
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+              <div style="background:#fff; border:1.5px solid #cbd5e1; border-radius:12px; padding:10px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                <!-- Animated SVG QR Code -->
+                <svg width="100" height="100" viewBox="0 0 100 100" style="display:block;">
+                  <rect width="100" height="100" fill="#ffffff" />
+                  <rect x="10" y="10" width="25" height="25" fill="#1e293b" />
+                  <rect x="15" y="15" width="15" height="15" fill="#ffffff" />
+                  <rect x="18" y="18" width="9" height="9" fill="#0ea5e9" />
+                  <rect x="65" y="10" width="25" height="25" fill="#1e293b" />
+                  <rect x="70" y="15" width="15" height="15" fill="#ffffff" />
+                  <rect x="73" y="18" width="9" height="9" fill="#0ea5e9" />
+                  <rect x="10" y="65" width="25" height="25" fill="#1e293b" />
+                  <rect x="15" y="70" width="15" height="15" fill="#ffffff" />
+                  <rect x="18" y="73" width="9" height="9" fill="#0ea5e9" />
+                  <rect x="45" y="15" width="10" height="10" fill="#1e293b" />
+                  <rect x="45" y="45" width="15" height="15" fill="#10b981" />
+                  <rect x="70" y="50" width="15" height="8" fill="#1e293b" />
+                  <rect x="70" y="75" width="18" height="12" fill="#7c3aed" />
+                  <rect x="45" y="70" width="10" height="18" fill="#1e293b" />
+                </svg>
+                <div style="font-size:0.68rem; color:#64748b; font-weight:700; margin-top:4px;">Scan & Pay Owner</div>
+              </div>
+              <div style="flex:1; min-width:220px;">
+                <div style="font-size:0.82rem; color:#475569; margin-bottom:4px;">
+                  Beneficiary Owner UPI ID: <strong style="color:#0f172a;">queueless.owner@hdfcbank</strong>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                  <input type="text" class="form-input" style="font-size:0.85rem;" value="dr.mehta@oksbi" placeholder="Enter your UPI ID (GPay/PhonePe)">
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.72rem;"><i class="fab fa-google-pay"></i> GPay</span>
+                  <span class="badge" style="background:#f3e8ff; color:#6b21a8; font-size:0.72rem;"><i class="fas fa-bolt"></i> PhonePe</span>
+                  <span class="badge" style="background:#ecfdf5; color:#065f46; font-size:0.72rem;"><i class="fas fa-wallet"></i> Paytm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Method 2: Card Simulator -->
+          <div id="vpayMethodView_CARD" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; margin-bottom:1.25rem;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group" style="grid-column:span 2; margin-bottom:6px;">
+                <label style="font-size:0.75rem; font-weight:700; color:#475569;">Card Number (Virtual Test Card)</label>
+                <input type="text" class="form-input" value="4532 8920 1192 8849" readonly style="font-family:'Courier New',monospace; font-weight:700;">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:0.75rem; font-weight:700; color:#475569;">Expiry Date</label>
+                <input type="text" class="form-input" value="09/29" readonly>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:0.75rem; font-weight:700; color:#475569;">CVV</label>
+                <input type="password" class="form-input" value="892" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Method 3: Net Banking -->
+          <div id="vpayMethodView_NETBANK" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; margin-bottom:1.25rem;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                <input type="radio" name="nbBank" checked> HDFC Bank (Corporate NetBanking)
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                <input type="radio" name="nbBank"> ICICI Institutional Bank
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                <input type="radio" name="nbBank"> State Bank of India
+              </label>
+            </div>
+          </div>
+
+          <!-- Order Summary Breakdown -->
+          <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:14px; padding:1.2rem 1.4rem; margin-bottom:1.25rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+              <span style="color:#1e3a8a;">Item Selected:</span>
+              <strong style="color:#1e3a8a;" id="checkoutSummaryItemName">Enterprise Platinum AI Suite</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+              <span style="color:#1e3a8a;">Platform License Base:</span>
+              <span id="checkoutSummaryPrice" style="color:#1e3a8a; font-weight:600;">₹3,999</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+              <span style="color:#1e3a8a;">GST & Processing Tax (18%):</span>
+              <span id="checkoutSummaryGST" style="color:#1e3a8a; font-weight:600;">₹720</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:1.15rem; font-weight:800; padding-top:6px; border-top:1px dashed #93c5fd;">
+              <span style="color:#1e40af;">Total Virtual Settlement:</span>
+              <span id="checkoutSummaryTotal" style="color:#1e40af;">₹4,719</span>
+            </div>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="closeDoctorPaymentModal()">Cancel</button>
+            <button id="btnConfirmVirtualPay" class="btn btn-primary" style="padding:12px 24px; font-weight:800; font-size:0.95rem; background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; box-shadow:0 4px 14px rgba(37,99,235,0.3);" onclick="processVirtualPaymentToOwner()">
+              <i class="fas fa-lock"></i> Authorize Payment to Platform Owner
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Processing Simulation Overlay -->
+      <div id="vpayProcessingOverlay" style="display:none; position:absolute; inset:0; background:rgba(255,255,255,0.96); border-radius:20px; z-index:999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem;">
+        <div style="width:70px; height:70px; border-radius:50%; border:5px solid #e2e8f0; border-top-color:#2563eb; animation:spin 1s linear infinite; margin-bottom:1.5rem;"></div>
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Processing Virtual Settlement...</h3>
+        <p id="vpayProcessingStatusText" style="font-size:0.9rem; color:#64748b; font-weight:600;">Connecting to QueueLess Platform Owner Bank Switch...</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       OFFICIAL PAYMENT RECEIPT / TAX INVOICE MODAL
+       ========================================================================== -->
+  <div id="vpayReceiptModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container" style="max-width:620px;">
+      
+      <div style="padding:2rem;">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #e2e8f0; padding-bottom:1rem; margin-bottom:1.25rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-layer-group" style="color:var(--primary); font-size:1.5rem;"></i>
+              <h2 style="font-family:'Outfit',sans-serif; margin:0; font-weight:900;">Queue<span style="color:var(--primary);">Less</span></h2>
+            </div>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">HealthTech SaaS Platform License • Tax Invoice</div>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge" style="background:#10b981; color:#fff; font-size:0.75rem; font-weight:800;"><i class="fas fa-check-circle"></i> PAID TO OWNER</span>
+            <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">Receipt: <strong id="receiptTxnId">TXN-QL-884920</strong></div>
+            <div style="font-size:0.78rem; color:#64748b;">Date: <span id="receiptDate">16 Oct 2026</span></div>
+          </div>
+        </div>
+
+        <!-- Bill Parties -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.25rem; font-size:0.82rem;">
+          <div>
+            <strong style="color:#64748b; text-transform:uppercase; font-size:0.72rem;">Billed To (Doctor):</strong>
+            <div style="font-size:0.95rem; font-weight:800; color:#0f172a;" id="receiptDocName">Dr. Sarah Mehta, MD</div>
+            <div style="color:#475569;">Cardiology & Internal Medicine OPD</div>
+            <div style="color:#475569;">Room 101, Apex City Care Hospital</div>
+          </div>
+          <div>
+            <strong style="color:#64748b; text-transform:uppercase; font-size:0.72rem;">Settled To (Platform Owner):</strong>
+            <div style="font-size:0.95rem; font-weight:800; color:#0f172a;" id="receiptBeneficiary">QueueLess Platform Owner</div>
+            <div style="color:#475569;">UPI: <code id="receiptBeneficiaryUpi">queueless.owner@hdfcbank</code></div>
+            <div style="color:#475569;">Cyber City, DLF Phase 2, Gurugram</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem;">
+          <thead>
+            <tr style="background:#f1f5f9; text-align:left; border-bottom:1.5px solid #cbd5e1;">
+              <th style="padding:8px 10px;">Item Description</th>
+              <th style="padding:8px 10px; text-align:right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #e2e8f0;">
+              <td style="padding:10px;" id="receiptPlanName">Enterprise Platinum AI Suite (Monthly)</td>
+              <td style="padding:10px; text-align:right; font-weight:700;" id="receiptAmount">₹3,999</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0; color:#64748b;">
+              <td style="padding:8px 10px;">CGST + SGST (18%)</td>
+              <td style="padding:8px 10px; text-align:right;" id="receiptGst">₹720</td>
+            </tr>
+            <tr style="font-weight:800; font-size:1.05rem; background:#f8fafc;">
+              <td style="padding:10px; color:#1e40af;">Total Settled:</td>
+              <td style="padding:10px; text-align:right; color:#1e40af;" id="receiptTotal">₹4,719</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Stamp & Note -->
+        <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:10px 14px; font-size:0.78rem; color:#065f46; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;">
+          <i class="fas fa-shield-check" style="font-size:1.4rem;"></i>
+          <div>
+            <strong>100% Ad-Free Clinical Console Guaranteed:</strong> All promotional advertisements are automatically suppressed for the duration of this license.
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="closeOwnerPaymentReceipt()">Close</button>
+          <button class="btn btn-primary btn-sm" onclick="printOwnerReceipt()"><i class="fas fa-print"></i> Print Receipt</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       AI CLINICAL COPILOT MODAL
+       ========================================================================== -->
+  <div id="aiCopilotModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container" style="max-width:680px;">
+      <div style="background:linear-gradient(135deg, #4c1d95, #6d28d9); color:#fff; padding:1.25rem 1.75rem; border-top-left-radius:20px; border-top-right-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fas fa-brain" style="font-size:1.4rem; color:#fde047;"></i>
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.25rem; font-weight:800;">AI Clinical Diagnostic Copilot</h3>
+        </div>
+        <button onclick="closeAiCopilotModal()" style="background:transparent; border:none; color:#cbd5e1; font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:10px 14px; margin-bottom:1rem; font-size:0.85rem;">
+          <i class="fas fa-user-circle" style="color:#7c3aed;"></i> Active Patient: <strong>Token MED-101 (Aarav Sharma)</strong> • Chief Symptom: <em>Acute Chest Tightness & Palpitations</em>
+        </div>
+
+        <div class="form-group">
+          <label style="font-size:0.8rem; font-weight:700; color:#374151;">Clinical Observations & Vitals:</label>
+          <textarea class="form-input" style="height:70px; font-size:0.85rem;">BP: 148/92 mmHg, Pulse: 104 bpm, SpO2: 97%, Chest pain radiating to left jaw on moderate exertion. No diaphoresis.</textarea>
+        </div>
+
+        <button class="btn btn-primary" style="background:#7c3aed; border:none; width:100%; margin-bottom:1rem; font-weight:700;" onclick="runAiDiagnosisSimulation()">
+          <i class="fas fa-bolt"></i> Generate AI Diagnostic Impressions & Drug Protocols
+        </button>
+
+        <div id="aiCopilotResult">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeAiCopilotModal()">Close Assistant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       WHATSAPP PATIENT QUEUE ALERT MODAL
+       ========================================================================== -->
+  <div id="whatsAppAlertModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container" style="max-width:540px;">
+      <div style="background:linear-gradient(135deg, #065f46, #047857); color:#fff; padding:1.25rem 1.75rem; border-top-left-radius:20px; border-top-right-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fab fa-whatsapp" style="font-size:1.6rem; color:#34d399;"></i>
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800;">Dispatch Live WhatsApp Queue Alert</h3>
+        </div>
+        <button onclick="closeWhatsAppAlertModal()" style="background:transparent; border:none; color:#cbd5e1; font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div style="padding:1.5rem 1.75rem;">
+        <p style="font-size:0.85rem; color:#475569; margin-bottom:1rem;">
+          Sends an automated real-time SMS & WhatsApp notification to the patient phone with exact countdown time:
+        </p>
+
+        <!-- Message Preview Box -->
+        <div style="background:#e7f8ef; border:1.5px solid #a7f3d0; border-radius:12px; padding:1rem; font-size:0.85rem; color:#064e3b; line-height:1.5; font-family:sans-serif; margin-bottom:1.25rem;">
+          <div style="font-weight:700; margin-bottom:4px;">🏥 APEX CITY CARE SUPER-SPECIALTY HOSPITAL</div>
+          <div>Dear <strong id="waPatientNamePreview">Aarav Sharma</strong>,</div>
+          <div>Dr. Sarah Mehta at Room 101 Desk will call your token <strong id="waTokenPreview">MED-101</strong> in approximately <strong>6 minutes</strong>.</div>
+          <div style="margin-top:6px;">Please arrive outside Room 101 Door immediately.</div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="closeWhatsAppAlertModal()">Cancel</button>
+          <button class="btn btn-success btn-sm" onclick="sendSimulatedWhatsAppAlert()"><i class="fab fa-whatsapp"></i> Dispatch Alert Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       GPS TRANSIT RADAR MODAL
+       ========================================================================== -->
+  <div id="transitRadarModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container" style="max-width:580px;">
+      <div style="background:linear-gradient(135deg, #0369a1, #0284c7); color:#fff; padding:1.25rem 1.75rem; border-top-left-radius:20px; border-top-right-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fas fa-satellite-dish" style="font-size:1.4rem; color:#fde047;"></i>
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800;">Live GPS Patient Transit Radar</h3>
+        </div>
+        <button onclick="closeTransitRadarModal()" style="background:transparent; border:none; color:#cbd5e1; font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1.25rem;">
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:10px;">
+            <div style="font-size:0.75rem; color:#0369a1; font-weight:700;">CURRENT LOCATION</div>
+            <div style="font-size:1rem; font-weight:800; color:#0f172a;">Connaught Place</div>
+            <div style="font-size:0.75rem; color:#64748b;">Distance: 2.8 km away</div>
+          </div>
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px;">
+            <div style="font-size:0.75rem; color:#15803d; font-weight:700;">LIVE SPEED & ETA</div>
+            <div style="font-size:1rem; font-weight:800; color:#0f172a;">24 km/h • ~9 Mins</div>
+            <div style="font-size:0.75rem; color:#10b981;">On Schedule (No Traffic Delay)</div>
+          </div>
+        </div>
+
+        <!-- Radar Pulse Circle Graphic -->
+        <div style="height:150px; background:#0f172a; border-radius:14px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+          <div style="width:120px; height:120px; border:1px solid rgba(14,165,233,0.3); border-radius:50%; position:absolute;"></div>
+          <div style="width:80px; height:80px; border:1px solid rgba(14,165,233,0.5); border-radius:50%; position:absolute;"></div>
+          <div style="width:40px; height:40px; border:1px solid rgba(14,165,233,0.8); border-radius:50%; position:absolute;"></div>
+          <div style="width:10px; height:10px; background:#10b981; border-radius:50%; box-shadow:0 0 12px #10b981; position:relative; z-index:2;"></div>
+          <div style="position:absolute; bottom:8px; left:12px; font-size:0.72rem; color:#94a3b8;"><i class="fas fa-car" style="color:#0ea5e9;"></i> Patient Car Moving along Ring Road</div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:1.25rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeTransitRadarModal()">Close Radar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       DIGITAL RX PRESCRIPTION MAKER MODAL
+       ========================================================================== -->
+  <div id="rxMakerModal" class="vpay-modal-backdrop" style="display:none;">
+    <div class="vpay-modal-container" style="max-width:620px;">
+      <div style="background:linear-gradient(135deg, #78350f, #92400e); color:#fff; padding:1.25rem 1.75rem; border-top-left-radius:20px; border-top-right-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fas fa-file-prescription" style="font-size:1.5rem; color:#fde047;"></i>
+          <h3 style="margin:0; font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800;">Official Hospital Digital Prescription Slip</h3>
+        </div>
+        <button onclick="closeRxMakerModal()" style="background:transparent; border:none; color:#cbd5e1; font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div style="padding:1.5rem 1.75rem; font-family:sans-serif;">
+        <div style="border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:12px; display:flex; justify-content:space-between;">
+          <div>
+            <h4 style="margin:0; color:#0f172a; font-size:1.1rem;" id="rxDoctorHeading">Dr. Sarah Mehta, MD</h4>
+            <div style="font-size:0.75rem; color:#64748b;">MCI Reg No: MCI-64921 • Room 101 Desk</div>
+          </div>
+          <div style="text-align:right; font-size:0.8rem; color:#475569;">
+            <div>Date: <strong id="rxDateHeading">16 Oct 2026</strong></div>
+            <div>Patient: <strong id="rxPatientHeading">Aarav Sharma</strong></div>
+          </div>
+        </div>
+
+        <div style="font-size:1.5rem; font-weight:900; color:#92400e; font-family:serif; margin-bottom:8px;">℞</div>
+
+        <div class="form-group" style="margin-bottom:12px;">
+          <textarea class="form-input" style="height:90px; font-size:0.85rem; font-family:monospace; line-height:1.5;">1. Tab. Ecosprin 75mg — 1 tablet daily after lunch (30 days)
+2. Tab. Atorvastatin 20mg — 1 tablet at bedtime (30 days)
+3. Tab. Metoprolol Tartrate 25mg — 1 tablet twice daily before meals (15 days)
+4. SOS: Tab. Sorbitrate 5mg sublingual in case of chest tightness.</textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #cbd5e1; padding-top:10px;">
+          <div style="font-size:0.75rem; color:#64748b;">Verified Digital Signature: Dr. Sarah Mehta (Apex Health)</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="closeRxMakerModal()">Close</button>
+            <button class="btn btn-warning btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Rx</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

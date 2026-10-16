@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueueLess — Live Database & Schema Explorer (Liquibase & Spring Boot)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --bg-main: #F4F8FC;
+      --bg-card: #FFFFFF;
+      --bg-sidebar: #EBF3FA;
+      --text-primary: #1E3A5F;
+      --text-secondary: #4A6585;
+      --text-muted: #7E97B2;
+      --border: #D2E3F3;
+      --border-light: #E5EFF9;
+      --primary: #4F8FCB;
+      --primary-soft: #EAF2F9;
+      --primary-dark: #356FA3;
+      --secondary: #8E82B8;
+      --secondary-soft: #F2EEFA;
+      --secondary-dark: #6E6198;
+      --accent-mint: #52B2A2;
+      --accent-mint-soft: #E9F7F5;
+      --accent-mint-dark: #398F81;
+      --accent-peach: #F29E65;
+      --accent-peach-soft: #FDF3EB;
+      --accent-peach-dark: #C97236;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 2px 8px rgba(79, 143, 203, 0.08);
+      --shadow-md: 0 4px 16px rgba(79, 143, 203, 0.12);
+      --shadow-lg: 0 8px 24px rgba(79, 143, 203, 0.15);
+      --transition: all 0.25s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 70px;
+      background: #FFFFFF;
+      border-bottom: 1.5px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .nav-brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-size: 1.2rem;
+    }
+    .nav-brand span { color: var(--primary); }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+    }
+
+    /* Container & Layout */
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; width: 100%; }
+    .section { padding: 2.5rem 0; flex: 1; }
+
+    /* Badges & Pills */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-blue { background: var(--primary-soft); color: var(--primary-dark); }
+    .badge-purple { background: var(--secondary-soft); color: var(--secondary-dark); }
+    .badge-green { background: var(--accent-mint-soft); color: var(--accent-mint-dark); }
+    .badge-peach { background: var(--accent-peach-soft); color: var(--accent-peach-dark); }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-mint);
+      display: inline-block;
+      box-shadow: 0 0 0 0 rgba(82, 178, 162, 0.7);
+      animation: pulseAnimation 1.8s infinite;
+    }
+    @keyframes pulseAnimation {
+      0% { box-shadow: 0 0 0 0 rgba(82, 178, 162, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(82, 178, 162, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(82, 178, 162, 0); }
+    }
+
+    /* KPI Grid */
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 1100px) { .grid-5 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) { .grid-5 { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: var(--transition);
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .kpi-val { font-size: 1.6rem; font-weight: 800; font-family: 'Poppins', sans-serif; line-height: 1.1; }
+    .kpi-lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+    /* Tables & Card Containers */
+    .db-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .db-card-header {
+      padding: 1.25rem 1.75rem;
+      background: #FFFFFF;
+      border-bottom: 1.5px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .db-card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th {
+      background: var(--bg-sidebar);
+      color: var(--text-secondary);
+      font-weight: 700;
+      padding: 12px 18px;
+      border-bottom: 1.5px solid var(--border);
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+    }
+    tr:hover td { background: var(--primary-soft); }
+
+    .code-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      background: var(--bg-sidebar);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .btn-primary { background: var(--primary); color: #FFFFFF; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--bg-sidebar); border-color: var(--border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: #FFFFFF; border-color: var(--primary); color: var(--primary-dark); }
+    .btn-mint { background: var(--accent-mint); color: #FFFFFF; }
+    .btn-mint:hover { background: var(--accent-mint-dark); }
+
+    /* Dynamic Footer */
+    .dynamic-footer {
+      background: #FFFFFF;
+      border-top: 1.5px solid var(--border-light);
+      padding: 2.5rem 0 1.5rem;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="mobile-app.html" class="nav-link"><i class="fas fa-mobile-alt"></i> Mobile Tracker</a>
+      <a href="staff-dashboard.html" class="nav-link"><i class="fas fa-user-cog"></i> Staff Desk</a>
+      <a href="admin-portal.html" class="nav-link"><i class="fas fa-landmark"></i> Org Admin</a>
+      <a href="database-live-view.html" class="nav-link active"><i class="fas fa-database"></i> Live Database</a>
+      <a href="analytics.html" class="nav-link"><i class="fas fa-chart-line"></i> Analytics</a>
+    </nav>
+
+    <div class="nav-actions" id="navAuthProfileSlot" style="display:flex; align-items:center; gap:10px;">
+      <!-- Managed dynamically by engine.js -->
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="section">
+    <div class="container">
+
+      <!-- Header Banner -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div class="badge badge-green" style="margin-bottom:8px;">
+            <span class="pulse-dot"></span> LIVE LIQUIBASE SCHEMA &amp; SPRING BOOT DB EXPLORER
+          </div>
+          <h1 style="font-family:'Poppins',sans-serif; font-size:1.9rem; font-weight:800; color:var(--text-primary);">
+            QueueLess Relational Database Dashboard
+          </h1>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-top:2px;">
+            Live reactive tables for Registered Users, Multi-Sector Admins, Counter Staff, and Queue Requests.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" onclick="seedSampleBatch()">
+            <i class="fas fa-undo"></i> Reset to Liquibase Seed
+          </button>
+          <button class="btn btn-primary" onclick="exportDatabaseJson()">
+            <i class="fas fa-download"></i> Export JSON Dump
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Stat Cards -->
+      <div class="grid-4" style="margin-bottom:2rem;">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:var(--secondary-soft); color:var(--secondary);">
+            <i class="fas fa-landmark"></i>
+          </div>
+          <div>
+            <div class="kpi-val" id="kpiOrgs">4</div>
+            <div class="kpi-lbl">Organizations (Table 1)</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:var(--accent-mint-soft); color:var(--accent-mint);">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div>
+            <div class="kpi-val" id="kpiStaff">4</div>
+            <div class="kpi-lbl">Staff Members (Table 2)</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:var(--primary-soft); color:var(--primary);">
+            <i class="fas fa-users"></i>
+          </div>
+          <div>
+            <div class="kpi-val" id="kpiClients">14</div>
+            <div class="kpi-lbl">Clients & Passes (Table 3)</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:var(--accent-peach-soft); color:var(--accent-peach-dark);">
+            <i class="fas fa-check-double"></i>
+          </div>
+          <div>
+            <div class="kpi-val">2 / 2 Applied</div>
+            <div class="kpi-lbl">Liquibase Changesets</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE 1: Organizations Master Directory -->
+      <div class="db-card">
+        <div class="db-card-header">
+          <div class="db-card-title">
+            <i class="fas fa-building" style="color:var(--secondary);"></i>
+            Table 1: Registered Organizations (Multi-Sector Directory)
+          </div>
+          <span class="badge badge-purple" id="badgeOrgCount">4 Organizations</span>
+        </div>
+        <div class="table-responsive">
+          <table id="tblOrgs">
+            <thead>
+              <tr>
+                <th>Organization ID</th>
+                <th>Organization Name</th>
+                <th>Operating Sector</th>
+                <th>Quality Rating</th>
+                <th>Fee / Budget</th>
+                <th>Registered Address</th>
+                <th>Emergency Support</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABLE 2: Staff Members (Linked to Organization) -->
+      <div class="db-card">
+        <div class="db-card-header">
+          <div class="db-card-title">
+            <i class="fas fa-user-shield" style="color:var(--accent-mint);"></i>
+            Table 2: Staff Registry (Linked to Associated Organization)
+          </div>
+          <span class="badge badge-green" id="badgeStaffCount">4 Staff Registered</span>
+        </div>
+        <div class="table-responsive">
+          <table id="tblStaff">
+            <thead>
+              <tr>
+                <th>Staff ID</th>
+                <th>Staff Member Name</th>
+                <th>Associated Organization</th>
+                <th>Official Designation</th>
+                <th>Department & Desk</th>
+                <th>Contact Phone</th>
+                <th>Attendance Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABLE 3: Registered Clients & Visit Pass Appointments -->
+      <div class="db-card">
+        <div class="db-card-header">
+          <div class="db-card-title">
+            <i class="fas fa-id-card-alt" style="color:var(--primary);"></i>
+            Table 3: Clients &amp; Visit Pass Appointments (Live Requests)
+          </div>
+          <span class="badge badge-blue" id="badgeClientCount">14 Client Records</span>
+        </div>
+        <div class="table-responsive">
+          <table id="tblClients">
+            <thead>
+              <tr>
+                <th>Pass Number</th>
+                <th>Client Name & Phone</th>
+                <th>Client Live Location</th>
+                <th>Target Organization</th>
+                <th>Purpose / Perspective</th>
+                <th>Appointment Timing</th>
+                <th>Live Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABLE 5: Liquibase Changelog Audit Log -->
+      <div class="db-card">
+        <div class="db-card-header">
+          <div class="db-card-title">
+            <i class="fas fa-history" style="color:var(--primary);"></i>
+            Table 5: Liquibase Database ChangeLog Schema History
+          </div>
+          <span class="badge badge-blue">DATABASECHANGELOG</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Author</th>
+                <th>Filename</th>
+                <th>Date Executed</th>
+                <th>Order</th>
+                <th>Exec Type</th>
+                <th>Description</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="code-pill">001-initial-schema</span></td>
+                <td>queueless_admin</td>
+                <td>db/changelog/changes/001-initial-schema.sql</td>
+                <td>2026-10-16 14:38:55</td>
+                <td>1</td>
+                <td>EXECUTED</td>
+                <td>CREATE TABLE organizations, users, staff_counters, queue_tokens, audit_logs</td>
+                <td><span class="badge badge-green"><i class="fas fa-check"></i> Applied</span></td>
+              </tr>
+              <tr>
+                <td><span class="code-pill">002-sample-data</span></td>
+                <td>queueless_admin</td>
+                <td>db/changelog/changes/002-sample-data.sql</td>
+                <td>2026-10-16 14:39:24</td>
+                <td>2</td>
+                <td>EXECUTED</td>
+                <td>INSERT 2 orgs, 2 users, 3 staff, 14 queue requests with mixed states</td>
+                <td><span class="badge badge-green"><i class="fas fa-check"></i> Applied</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Dynamic Contextual Footer -->
+  <footer class="dynamic-footer" id="dynamicFooterSlot">
+    <!-- Populated by engine.js -->
+  </footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    // Liquibase Seed Samples for Users & Organizations
+    const SEED_USERS_CITIZENS = [
+      { id: 'usr-user-1', name: 'Aarav Sharma', email: 'user@gmail.com', phone: '+91 98765 43210', role: 'VISITOR', org: 'Apex National University', status: 'Active Check-in' },
+      { id: 'usr-user-2', name: 'Sunita Patel', email: 'sunita.patel@gmail.com', phone: '+91 98112 34567', role: 'VISITOR', org: 'Apex National University', status: 'Active Check-in' }
+    ];
+
+    const SEED_ADMINS_ORGS = [
+      { id: 'usr-admin-univ', name: 'Dr. Alok Nath', orgName: 'Apex National University', sector: 'UNIVERSITY', email: 'admin@univ.edu', phone: '+91 98100 11223' },
+      { id: 'usr-admin-corp', name: 'Rohan Singhania', orgName: 'Nexora Solutions Pvt Ltd', sector: 'PVT_LTD', email: 'admin@pvtcorp.com', phone: '+91 98200 22334' },
+      { id: 'usr-admin-psu', name: 'Shri B. K. Tripathi', orgName: 'Bharat Public Services Authority', sector: 'PSU', email: 'admin@psu.gov.in', phone: '+91 98300 33445' },
+      { id: 'usr-admin-tech', name: 'Vikramaditya Roy', orgName: 'CloudScale Technologies Inc.', sector: 'TECH_CORP', email: 'admin@techcorp.io', phone: '+91 98400 44556' }
+    ];
+
+    const SEED_STAFF_COUNTERS = [
+      { counterId: 1, counterName: 'Counter 1 (Admissions Desk)', staff: 'Dr. Sarah Mehta', service: 'Admissions & Course Enrollment', currentToken: 'A-101', status: 'IN_SERVICE' },
+      { counterId: 2, counterName: 'Counter 2 (Transcripts Cell)', staff: 'Mr. Rajesh Sharma', service: 'Official Degree & Transcripts', currentToken: 'W-201', status: 'IN_SERVICE' },
+      { counterId: 3, counterName: 'Counter 3 (Fee Clearance)', staff: 'Ms. Anita Verma', service: 'Semester Fee & Scholarship', currentToken: null, status: 'IDLE' },
+      { counterId: 4, counterName: 'Desk 4 (Corporate HR)', staff: 'Rohan Singhania', service: 'Candidate Interviews', currentToken: 'A-105', status: 'CALLING' }
+    ];
+
+    function renderDatabaseDashboard() {
+      // 1. Render Table 1: Organizations Directory
+      const orgs = (typeof ORGANIZATION_REGISTRY !== 'undefined') ? ORGANIZATION_REGISTRY : [];
+      document.getElementById('kpiOrgs').innerText = orgs.length;
+      document.getElementById('badgeOrgCount').innerText = `${orgs.length} Registered Organizations`;
+
+      const tbodyOrgs = document.querySelector('#tblOrgs tbody');
+      if (tbodyOrgs) {
+        tbodyOrgs.innerHTML = orgs.map(o => `
+          <tr>
+            <td><span class="code-pill">${o.id}</span></td>
+            <td><strong><i class="fas ${o.icon}" style="color:var(--primary); margin-right:4px;"></i> ${o.name}</strong></td>
+            <td><span class="badge ${o.category === 'EDU' ? 'badge-blue' : o.category === 'HEALTH' ? 'badge-peach' : o.category === 'TECH' ? 'badge-purple' : 'badge-green'}">${o.categoryName}</span></td>
+            <td><span class="badge badge-mint"><i class="fas fa-star" style="color:#F29E65;"></i> ${o.placeRating} (${o.ratingCount} reviews)</span></td>
+            <td><strong style="color:var(--text-primary);">${o.feeLabel}</strong></td>
+            <td><span style="font-size:0.8rem; color:var(--text-secondary);">${o.address}</span></td>
+            <td>${o.emergencySupported ? '<span class="badge badge-peach"><i class="fas fa-ambulance"></i> Emergency Ready</span>' : '<span style="color:var(--text-muted); font-size:0.75rem;">Standard Services</span>'}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 2. Render Table 2: Staff Registry (Linked to Organization)
+      const staffList = (typeof getAdminStaffRegistry === 'function') ? getAdminStaffRegistry() : [];
+      document.getElementById('kpiStaff').innerText = staffList.length || 4;
+      document.getElementById('badgeStaffCount').innerText = `${staffList.length || 4} Staff Registered`;
+
+      const tbodyStaff = document.querySelector('#tblStaff tbody');
+      if (tbodyStaff && staffList.length > 0) {
+        tbodyStaff.innerHTML = staffList.map(s => `
+          <tr>
+            <td><span class="code-pill">${s.staffId || 'STF-001'}</span></td>
+            <td><strong>${s.name}</strong></td>
+            <td><strong style="color:var(--secondary);">${s.orgName || 'Apex National University'}</strong></td>
+            <td>${s.designation || 'Consultant'}</td>
+            <td>${s.department || 'Operations'} • <span style="font-weight:600; color:var(--primary);">${s.counterName || 'Desk 1'}</span></td>
+            <td>${s.phone || '+91 98500 00000'}</td>
+            <td>
+              <span class="badge ${s.leaveStatus === 'ON_LEAVE' ? 'badge-peach' : 'badge-green'}">
+                <i class="fas ${s.leaveStatus === 'ON_LEAVE' ? 'fa-plane-departure' : 'fa-check'}"></i> ${s.leaveStatus === 'ON_LEAVE' ? 'On Leave' : 'On Duty'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // 3. Render Table 3: Clients & Visit Pass Appointments
+      const clients = (typeof getAdminClientTodoList === 'function') ? getAdminClientTodoList() : (getTokens ? getTokens() : []);
+      document.getElementById('kpiClients').innerText = clients.length;
+      document.getElementById('badgeClientCount').innerText = `${clients.length} Client Records`;
+
+      const tbodyClients = document.querySelector('#tblClients tbody');
+      if (tbodyClients) {
+        tbodyClients.innerHTML = clients.map(c => {
+          const statusBadge = c.status === 'COMPLETED' ? 'badge-green' : c.status === 'IN_SERVICE' ? 'badge-blue' : c.status === 'PENDING_APPROVAL' ? 'badge-peach' : c.status === 'CANCELLED_BY_ORG' ? 'badge-peach' : 'badge-purple';
+          return `
+            <tr>
+              <td><strong style="color:var(--primary-dark); font-family:'Poppins',sans-serif;">${c.tokenNumber}</strong></td>
+              <td>
+                <div style="font-weight:700; color:var(--text-primary);">${c.userName}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-phone-alt"></i> ${c.userPhone}</div>
+              </td>
+              <td><i class="fas fa-map-marker-alt" style="color:var(--accent-peach);"></i> ${c.userLocation || 'Nearby (Approx. 1 km)'}</td>
+              <td><strong style="color:var(--secondary);">${c.orgName || 'Apex National University'}</strong></td>
+              <td><div style="font-weight:600;">${c.perspective || 'Consultation'}</div></td>
+              <td><span style="font-weight:700; color:var(--accent-mint);">${c.timing || '10:30 AM'}</span></td>
+              <td><span class="badge ${statusBadge}">${c.status === 'CANCELLED_BY_ORG' ? 'DECLINED' : c.status}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function seedSampleBatch() {
+      localStorage.removeItem('ql_tokens');
+      localStorage.removeItem('ql_counters');
+      localStorage.removeItem('ql_users');
+      if (typeof initQueueStorage === 'function') initQueueStorage();
+      renderDatabaseDashboard();
+      showToast('Database reset to clean 14-item Liquibase sample seed!', 'success');
+    }
+
+    function exportDatabaseJson() {
+      const exportData = {
+        database: 'queueless_h2_postgresql',
+        liquibaseChangelog: 'db.changelog-master.yaml',
+        timestamp: new Date().toISOString(),
+        users: getUsers ? getUsers() : [],
+        counters: getCounters ? getCounters() : [],
+        tokens: getTokens ? getTokens() : [],
+        auditLogs: getAuditLogs ? getAuditLogs() : []
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `queueless_db_dump_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast('Database snapshot exported as JSON!', 'success');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDatabaseDashboard();
+      if (typeof renderUniversalNavAuth === 'function') renderUniversalNavAuth();
+      if (typeof renderDynamicFooter === 'function') renderDynamicFooter();
+
+      // Listen for real-time storage & queue events
+      if (typeof onQueueUpdate === 'function') {
+        onQueueUpdate(() => {
+          renderDatabaseDashboard();
+        });
+      }
+
+      // Auto-poll every 2 seconds for live reactivity
+      setInterval(renderDatabaseDashboard, 2000);
+    });
+  </script>
+</body>
+</html>

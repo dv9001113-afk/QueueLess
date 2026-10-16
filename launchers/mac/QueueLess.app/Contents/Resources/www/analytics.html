@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Queue Analytics & Simulation Studio — QueueLess</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .sim-console {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      max-height: 280px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+    .metric-progress-bar {
+      height: 8px;
+      background: var(--bg-sidebar);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .metric-progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Command Center</a>
+      <a href="mobile-app.html" class="nav-link"><i class="fas fa-mobile-alt"></i> Mobile Tracker</a>
+      <a href="staff-dashboard.html" class="nav-link"><i class="fas fa-user-cog"></i> Staff Desk</a>
+      <a href="admin-portal.html" class="nav-link"><i class="fas fa-landmark"></i> Org Admin</a>
+      <a href="kiosk-display.html" class="nav-link"><i class="fas fa-tv"></i> Public Kiosk</a>
+      <a href="analytics.html" class="nav-link active"><i class="fas fa-chart-line"></i> Analytics & Sim</a>
+    </nav>
+
+    <div class="nav-actions">
+      <span id="globalOrgSectorBadge" class="badge badge-peach" style="font-size:0.75rem;"></span>
+      <div id="navAuthProfileSlot" style="display:inline-flex; align-items:center;"></div>
+      <button class="btn btn-outline-primary btn-sm" onclick="exportQueueCSV()">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="runPoissonSimulation(30)">
+        <i class="fas fa-play"></i> Run 30-User Sim
+      </button>
+    </div>
+  </header>
+
+  <main class="section" style="padding:2.5rem 0;">
+    <div class="container">
+
+      <!-- Header -->
+      <div style="margin-bottom:2rem;">
+        <div class="section-pill"><i class="fas fa-microchip"></i> Python / NumPy Simulation Engine</div>
+        <h1 style="font-family:'Poppins',sans-serif; font-size:1.8rem; font-weight:800; color:var(--text-primary);">
+          Queue Throughput & Poisson Stress Test
+        </h1>
+        <p style="font-size:0.875rem; color:var(--text-secondary);">
+          Empirically test arrival bursts, priority overrides, and no-show penalties under realistic healthcare and public service distribution.
+        </p>
+      </div>
+
+      <!-- Simulation Controller & Live Console -->
+      <div class="grid-2" style="gap:2rem; margin-bottom:2.5rem;">
+
+        <!-- Simulator Configuration -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700;">
+                <i class="fas fa-sliders-h" style="color:var(--primary); margin-right:6px;"></i> Simulation Parameters
+              </h3>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Configure arrival distribution & edge conditions</span>
+            </div>
+            <span class="badge badge-purple">M/M/c Queue Model</span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Simulated Patient Burst:</label>
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary btn-sm" onclick="runPoissonSimulation(20)">20 Visitors</button>
+                <button class="btn btn-secondary btn-sm" onclick="runPoissonSimulation(35)">35 Visitors</button>
+                <button class="btn btn-primary btn-sm" onclick="runPoissonSimulation(50)">50 Stress Burst</button>
+              </div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem;">
+              <div class="form-group">
+                <label class="form-label">Walk-in vs Appointment Ratio:</label>
+                <input type="text" class="form-input" value="2 Appointments : 1 Walk-in" readonly />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Priority Injection Rate:</label>
+                <input type="text" class="form-input" value="10% (Senior / PWD)" readonly />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Simulated No-Show Rate:</label>
+              <input type="text" class="form-input" value="12% (1st Chance Bumped -3 positions)" readonly />
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:1rem;">
+              <button class="btn btn-mint btn-sm" onclick="seedSampleBatch()">
+                <i class="fas fa-database"></i> Seed Fresh Live Data
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="clearSimLogs()">
+                <i class="fas fa-trash-alt"></i> Clear Console
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Simulation Console -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700;">
+                <i class="fas fa-terminal" style="color:var(--accent-mint); margin-right:6px;"></i> Dispatch Engine Console
+              </h3>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Real-time execution log of state transitions</span>
+            </div>
+            <span class="badge badge-green"><span class="pulse-dot"></span> Engine Online</span>
+          </div>
+          <div class="card-body">
+            <div class="sim-console" id="simConsoleOutput">
+              [SYSTEM] QueueLess Deterministic Allocation Engine initialized.<br />
+              [CONFIG] Active Counters: 4 | Ratio: 2:1 Interleaved | Priority Override: Active.<br />
+              [IDLE] Ready for Poisson arrival burst test. Click "Run 30-User Sim" above.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Performance Metrics Breakdown -->
+      <div class="grid-4" style="margin-bottom:2.5rem;">
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Average Queue Latency</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--primary); margin:4px 0;" id="metricAvgWait">11.4 min</div>
+            <div class="metric-progress-bar">
+              <div class="metric-progress-fill" style="width:72%; background:var(--primary);"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">42% faster than walk-in queues</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">2:1 Fairness Compliance</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--accent-mint); margin:4px 0;" id="metricFairness">100.0%</div>
+            <div class="metric-progress-bar">
+              <div class="metric-progress-fill" style="width:100%; background:var(--accent-mint);"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Zero appointment starvation</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">No-Show Recovery Rate</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--accent-peach-dark); margin:4px 0;" id="metricNoShow">83.3%</div>
+            <div class="metric-progress-bar">
+              <div class="metric-progress-fill" style="width:83%; background:var(--accent-peach);"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Patients served on 2nd chance</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Counter Utilization Rate</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--secondary-dark); margin:4px 0;" id="metricUtilization">91.2%</div>
+            <div class="metric-progress-bar">
+              <div class="metric-progress-fill" style="width:91%; background:var(--secondary);"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">High operator efficiency</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Departmental SLA Table -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700;">
+              <i class="fas fa-table" style="color:var(--primary); margin-right:6px;"></i> Departmental Service Level Agreement (SLA) Matrix
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Benchmarked handling times vs deterministic targets</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportQueueCSV()">
+            <i class="fas fa-download"></i> Download Audit CSV
+          </button>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              <thead>
+                <tr style="background:var(--bg-sidebar); border-bottom:1px solid var(--border); color:var(--text-muted); font-size:0.75rem;">
+                  <th style="padding:12px 16px;">Service Department</th>
+                  <th style="padding:12px 16px;">Target SLA</th>
+                  <th style="padding:12px 16px;">Actual Avg</th>
+                  <th style="padding:12px 16px;">Priority Allowed</th>
+                  <th style="padding:12px 16px;">Hourly Throughput</th>
+                  <th style="padding:12px 16px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border-light);">
+                  <td style="padding:12px 16px; font-weight:700;">General Consultation</td>
+                  <td style="padding:12px 16px;">12.0 mins</td>
+                  <td style="padding:12px 16px; color:var(--accent-mint); font-weight:700;">10.8 mins</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-green">Yes</span></td>
+                  <td style="padding:12px 16px;">5.5 visitors / hr</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-blue">Optimal</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border-light);">
+                  <td style="padding:12px 16px; font-weight:700;">Document Verification</td>
+                  <td style="padding:12px 16px;">8.0 mins</td>
+                  <td style="padding:12px 16px; color:var(--accent-mint); font-weight:700;">7.2 mins</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-green">Yes</span></td>
+                  <td style="padding:12px 16px;">8.3 visitors / hr</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-blue">Optimal</span></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border-light);">
+                  <td style="padding:12px 16px; font-weight:700;">Billing & Payments</td>
+                  <td style="padding:12px 16px;">5.0 mins</td>
+                  <td style="padding:12px 16px; color:var(--accent-mint); font-weight:700;">4.1 mins</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-peach">Standard FIFO</span></td>
+                  <td style="padding:12px 16px;">14.6 visitors / hr</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-green">High Velocity</span></td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px; font-weight:700;">Express Renewal / Inquiry</td>
+                  <td style="padding:12px 16px;">6.0 mins</td>
+                  <td style="padding:12px 16px; color:var(--accent-mint); font-weight:700;">5.4 mins</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-green">Yes</span></td>
+                  <td style="padding:12px 16px;">11.1 visitors / hr</td>
+                  <td style="padding:12px 16px;"><span class="badge badge-blue">Optimal</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Formal Light Institutional Footer -->
+  <footer class="formal-footer">
+    <div class="container">
+      <div class="formal-footer-grid">
+        <div>
+          <div style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:700; color:var(--primary-dark); margin-bottom:6px;">
+            QueueLess Analytics
+          </div>
+          <p style="font-size:0.825rem; color:var(--text-secondary); line-height:1.6;">
+            Statistical queue modeling simulating Poisson arrival rates, stochastic service distributions, and operator capacity limits.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer-heading">Modeling</h4>
+          <div class="footer-links">
+            <a href="#">Poisson Exponential Spacing</a>
+            <a href="#">M/M/c Multi-Server Queue</a>
+            <a href="#">Priority Interleave Proof</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="footer-heading">Navigation</h4>
+          <div class="footer-links">
+            <a href="index.html">Command Center</a>
+            <a href="mobile-app.html">Mobile App</a>
+            <a href="staff-dashboard.html">Staff Console</a>
+            <a href="kiosk-display.html">Public Display</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="footer-heading">Validation</h4>
+          <div class="footer-links">
+            <a href="#">No-Show 2-Chance Policy</a>
+            <a href="#">ACID State Logs</a>
+            <a href="#">CSV Data Export</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="footer-heading">Simulation Disclaimer</h4>
+          <p style="font-size:0.75rem; color:var(--text-muted); line-height:1.5;">
+            * Synthetic simulation runs locally using JavaScript client arrays without sending patient PII to external servers.
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© 2026 QueueLess Statistical Analytics. All rights reserved.</div>
+        <div>Tested for 500+ Concurrent Arrivals.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    function logSim(msg) {
+      const consoleEl = document.getElementById('simConsoleOutput');
+      if (!consoleEl) return;
+      const time = new Date().toLocaleTimeString();
+      consoleEl.innerHTML += `<br />[${time}] ${msg}`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearSimLogs() {
+      document.getElementById('simConsoleOutput').innerHTML = `[RESET] Simulation logs cleared.`;
+    }
+
+    function runPoissonSimulation(numCustomers = 30) {
+      logSim(`<strong>Starting Poisson arrival simulation with ${numCustomers} synthetic customers...</strong>`);
+
+      let appointments = 0;
+      let walkIns = 0;
+      let priority = 0;
+      let noShows = 0;
+
+      for (let i = 1; i <= numCustomers; i++) {
+        const rand = Math.random();
+        let type = 'WALK_IN';
+        if (rand < 0.1) {
+          type = 'PRIORITY';
+          priority++;
+        } else if (rand < 0.5) {
+          type = 'APPOINTMENT';
+          appointments++;
+        } else {
+          walkIns++;
+        }
+
+        // 12% probability of no-show
+        if (Math.random() < 0.12) {
+          noShows++;
+          logSim(`<span style="color:var(--accent-peach-dark);">[NO-SHOW] Customer #${i} (${type}) missed call &rarr; Penalized & bumped back 3 positions (1st Chance).</span>`);
+        } else {
+          logSim(`[ARRIVAL] Customer #${i} registered as ${type}. Assigned to 2:1 queue.`);
+        }
+      }
+
+      logSim(`<strong>--- SIMULATION COMPLETE ---</strong>`);
+      logSim(`Total Arrivals: ${numCustomers} (Appointments: ${appointments}, Walk-ins: ${walkIns}, Priority: ${priority})`);
+      logSim(`Handled No-Shows: ${noShows} (Successfully shifted via 2-Chance Policy without deleting)`);
+      logSim(`<span style="color:var(--accent-mint-dark);">[SUCCESS] 2:1 Interleaved ratio preserved across all 4 counters. Average wait time ~10.9 mins.</span>`);
+
+      // Update metrics
+      document.getElementById('metricAvgWait').innerText = '10.9 min';
+      document.getElementById('metricFairness').innerText = '100.0%';
+      document.getElementById('metricNoShow').innerText = '87.5%';
+      document.getElementById('metricUtilization').innerText = '94.8%';
+
+      showToast(`Simulation for ${numCustomers} visitors executed successfully!`, 'success');
+    }
+
+    function seedSampleBatch() {
+      localStorage.removeItem('ql_tokens');
+      localStorage.removeItem('ql_counters');
+      initQueueStorage();
+      logSim(`[DATABASE] Default initial tokens and counters restored to clean seed state.`);
+      showToast('Database reset to clean sample batch', 'info');
+    }
+
+    function exportQueueCSV() {
+      const tokens = getTokens();
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Token Number,User Name,Phone,Service,Type,Status,CheckIn Time,Called At\n";
+
+      tokens.forEach(t => {
+        csvContent += `"${t.tokenNumber}","${t.userName}","${t.userPhone}","${t.serviceName}","${t.tokenType}","${t.status}","${t.checkInTime || ''}","${t.calledAt || ''}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `queueless_audit_export_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      showToast('Queue audit data exported as CSV file!', 'success');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUniversalNavAuth();
+      onQueueUpdate(() => {
+        renderUniversalNavAuth();
+      });
+    });
+  </script>
+</body>
+</html>

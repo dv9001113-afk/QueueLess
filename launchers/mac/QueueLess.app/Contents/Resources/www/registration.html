@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient & Staff Onboarding — Apex City Care Hospital</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - 140px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+    }
+    .auth-card {
+      max-width: 640px;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08);
+    }
+    .role-toggle-btn {
+      flex: 1;
+      padding: 12px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-sidebar);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .role-toggle-btn.active {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+    .transit-pill-mini {
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+      transition: var(--transition-fast);
+    }
+    .transit-pill-mini.active {
+      border-color: #10b981;
+      background: #10b981;
+      color: #fff;
+    }
+    .travel-preview-box {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 1.5px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Hospital Navbar -->
+  <header class="navbar"></header>
+
+  <div class="auth-wrapper">
+    <div class="auth-card soft-glass-card fade-in-up">
+      <div style="text-align:center; margin-bottom:1.75rem;">
+        <span class="badge badge-mint" style="margin-bottom:8px;">
+          <i class="fas fa-hospital-user"></i> Hospital Registration Portal
+        </span>
+        <h1 class="animated-gradient-text" style="font-family:'Poppins',sans-serif; font-size:1.8rem; font-weight:800; margin-bottom:4px;">
+          Patient & Staff Onboarding
+        </h1>
+        <p style="font-size:0.875rem; color:var(--text-secondary);">
+          Instant digital token allocation, distance-based travel calculation & QR passes
+        </p>
+      </div>
+
+      <!-- Registration Role Selector Tabs -->
+      <div style="display:flex; gap:8px; margin-bottom:1.5rem;">
+        <div class="role-toggle-btn active" id="btnRolePatient" onclick="switchRegistrationRole('VISITOR')">
+          <i class="fas fa-user-injured" style="font-size:1.2rem; color:#10b981;"></i>
+          <span>OPD Patient / Client</span>
+        </div>
+        <div class="role-toggle-btn" id="btnRoleStaff" onclick="switchRegistrationRole('STAFF')">
+          <i class="fas fa-user-shield" style="font-size:1.2rem; color:#0ea5e9;"></i>
+          <span>Hospital Staff</span>
+        </div>
+        <div class="role-toggle-btn" id="btnRoleDoctor" onclick="switchRegistrationRole('DOCTOR')">
+          <i class="fas fa-user-md" style="font-size:1.2rem; color:#8b5cf6;"></i>
+          <span>OPD Doctor</span>
+        </div>
+      </div>
+
+      <form id="onboardingForm" onsubmit="handleOnboardingSubmit(event)">
+        <!-- Common Profile Details -->
+        <div class="grid-2" style="gap:1rem;">
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-user"></i> Full Legal Name:</label>
+            <input type="text" id="regName" class="form-input" placeholder="e.g. Aarav Sharma" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-phone"></i> Mobile Contact:</label>
+            <input type="tel" id="regPhone" class="form-input" placeholder="+91 98765 43210" required />
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:1rem;">
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-envelope"></i> Email Address:</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="name@example.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-lock"></i> Create Password:</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="At least 6 characters" minlength="6" required />
+          </div>
+        </div>
+
+        <!-- PATIENT SPECIFIC SECTION -->
+        <div id="patientSpecificSection">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+            <div style="font-weight:700; font-size:0.9rem; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+              <i class="fas fa-stethoscope" style="color:#10b981;"></i> Select Consultation Doctor & Slot
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.75rem;">
+              <label class="form-label">Consulting Specialist Doctor (10 Available):</label>
+              <select id="regDoctorSelect" class="form-input" onchange="updateDoctorSlotOptions()">
+                <!-- Populated dynamically from 10 Doctors -->
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.75rem;">
+              <label class="form-label">Doctor's Available Free Time Slot:</label>
+              <div id="regSlotsContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Chief Medical Complaint / Symptoms:</label>
+              <input type="text" id="regComplaint" class="form-input" placeholder="e.g. Chest tightness, joint pain, migraine, skin rash" />
+            </div>
+          </div>
+
+          <!-- Distance & Live Location Calculation -->
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="font-weight:700; font-size:0.9rem; color:#14532d;">
+                <i class="fas fa-map-marked-alt" style="color:#10b981;"></i> Distance to Apex Hospital & Travel Calculation
+              </div>
+              <span class="badge badge-mint" id="previewDistText">2.5 km</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+              <div>
+                <label class="form-label" style="font-size:0.75rem;">Your Location / Area:</label>
+                <select id="regLocationSelect" class="form-input" style="font-size:0.8rem; background:#fff;" onchange="handleLocationDropdownChange()">
+                  <option value="1.2">South Extension, South Zone (1.2 km)</option>
+                  <option value="2.5" selected>Connaught Place, Central Zone (2.5 km)</option>
+                  <option value="4.5">Karol Bagh, West Zone (4.5 km)</option>
+                  <option value="6.4">Vasant Kunj, South West (6.4 km)</option>
+                  <option value="8.5">Noida Sector 62, East Zone (8.5 km)</option>
+                  <option value="12.0">Gurugram Cyber City (12.0 km)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="form-label" style="font-size:0.75rem;">Mode of Transit:</label>
+                <div style="display:flex; gap:6px;">
+                  <div class="transit-pill-mini" id="pillWalk" onclick="setRegTransitMode('WALK')">Walk</div>
+                  <div class="transit-pill-mini active" id="pillBike" onclick="setRegTransitMode('TWO_WHEELER')">2-Wheeler</div>
+                  <div class="transit-pill-mini" id="pillCar" onclick="setRegTransitMode('CAR')">Car / Cab</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Travel Time Preview -->
+            <div class="travel-preview-box">
+              <div>
+                <div style="font-size:0.75rem; color:#065f46; font-weight:700; text-transform:uppercase;">
+                  <i class="fas fa-route"></i> DYNAMIC TRAVEL TIME ESTIMATE
+                </div>
+                <div style="font-size:0.82rem; color:#047857; margin-top:2px;" id="travelSummaryText">
+                  Estimated travel duration: <strong>5 mins</strong> by 2-Wheeler
+                </div>
+              </div>
+              <div style="font-size:1.4rem; font-weight:800; color:#065f46; font-family:'Poppins',sans-serif;" id="previewTravelMins">
+                5 mins
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAFF SPECIFIC SECTION (Hidden by default) -->
+        <div id="staffSpecificSection" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+          <div style="font-weight:700; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">
+            <i class="fas fa-id-badge" style="color:#0ea5e9;"></i> Hospital Operations Staff Setup
+          </div>
+          <div class="grid-2" style="gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Official Staff ID:</label>
+              <input type="text" id="regStaffId" class="form-input" placeholder="e.g. STF-011" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Assigned Calling Desk:</label>
+              <select id="regStaffDesk" class="form-input">
+                <option value="OPD Calling Desk 1">OPD Calling Desk 1 (Cardiology)</option>
+                <option value="OPD Calling Desk 2">OPD Calling Desk 2 (Medicine)</option>
+                <option value="OPD Calling Desk 3">OPD Calling Desk 3 (Pediatrics)</option>
+                <option value="OPD Calling Desk 4">OPD Calling Desk 4 (Orthopedics)</option>
+                <option value="OPD Calling Desk 5">OPD Calling Desk 5 (Dermatology)</option>
+                <option value="OPD Calling Desk 6">OPD Calling Desk 6 (ENT)</option>
+                <option value="OPD Calling Desk 7">OPD Calling Desk 7 (Neurology)</option>
+                <option value="OPD Calling Desk 8">OPD Calling Desk 8 (Gynecology)</option>
+                <option value="OPD Calling Desk 9">OPD Calling Desk 9 (Oncology)</option>
+                <option value="OPD Calling Desk 10">OPD Calling Desk 10 (Ophthalmology)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Designation / Role Title:</label>
+            <input type="text" id="regStaffDesignation" class="form-input" placeholder="e.g. OPD Coordinator & Calling Desk Operator" />
+          </div>
+        </div>
+
+        <!-- DOCTOR SPECIFIC SECTION (Hidden by default) -->
+        <div id="doctorSpecificSection" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+          <div style="font-weight:700; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">
+            <i class="fas fa-user-md" style="color:#8b5cf6;"></i> Doctor Clinical Onboarding
+          </div>
+          <div class="grid-2" style="gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Clinical Specialty:</label>
+              <input type="text" id="regDocSpecialty" class="form-input" placeholder="e.g. Senior Consultant Cardiologist" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Consultation Room No.:</label>
+              <input type="text" id="regDocRoom" class="form-input" placeholder="e.g. Room 101" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-soft-glow" style="padding:14px; font-size:1rem; font-weight:700; margin-top:0.5rem;">
+          <i class="fas fa-check-circle"></i> Complete Registration & Open App
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.875rem; color:var(--text-secondary);">
+        Already have an account? <a href="login.html" style="color:var(--primary); font-weight:700;">Sign In here</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    let activeRole = 'VISITOR';
+    let chosenDistanceKm = 2.5;
+    let chosenTransitMode = 'TWO_WHEELER';
+    let chosenSlotTime = '10:30 AM';
+
+    function switchRegistrationRole(role) {
+      activeRole = role;
+      document.getElementById('btnRolePatient').classList.toggle('active', role === 'VISITOR');
+      document.getElementById('btnRoleStaff').classList.toggle('active', role === 'STAFF');
+      document.getElementById('btnRoleDoctor').classList.toggle('active', role === 'DOCTOR');
+
+      document.getElementById('patientSpecificSection').style.display = role === 'VISITOR' ? 'block' : 'none';
+      document.getElementById('staffSpecificSection').style.display = role === 'STAFF' ? 'block' : 'none';
+      document.getElementById('doctorSpecificSection').style.display = role === 'DOCTOR' ? 'block' : 'none';
+    }
+
+    function populateDoctorsDropdown() {
+      const doctors = getDoctors();
+      const select = document.getElementById('regDoctorSelect');
+      if (!select) return;
+      select.innerHTML = doctors.map(d => `
+        <option value="${d.id}">
+          ${d.name} (${d.specialty}) • ${d.room}
+        </option>
+      `).join('');
+      updateDoctorSlotOptions();
+    }
+
+    function updateDoctorSlotOptions() {
+      const doctors = getDoctors();
+      const docId = document.getElementById('regDoctorSelect').value;
+      const doc = doctors.find(d => d.id === docId) || doctors[0];
+      const container = document.getElementById('regSlotsContainer');
+      if (!container || !doc) return;
+
+      container.innerHTML = doc.freeSlots.map((slot, idx) => `
+        <button type="button" class="slot-pill-btn ${idx === 0 ? 'active' : ''}" onclick="selectRegSlot('${slot}', this)">
+          <i class="fas fa-clock"></i> ${slot}
+        </button>
+      `).join('');
+
+      chosenSlotTime = doc.freeSlots[0] || '10:30 AM';
+    }
+
+    function selectRegSlot(slot, btn) {
+      chosenSlotTime = slot;
+      document.querySelectorAll('#regSlotsContainer .slot-pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function handleLocationDropdownChange() {
+      const dist = parseFloat(document.getElementById('regLocationSelect').value);
+      chosenDistanceKm = dist;
+      recalculateTravelPreview();
+    }
+
+    function setRegTransitMode(mode) {
+      chosenTransitMode = mode;
+      document.getElementById('pillWalk').classList.toggle('active', mode === 'WALK');
+      document.getElementById('pillBike').classList.toggle('active', mode === 'TWO_WHEELER');
+      document.getElementById('pillCar').classList.toggle('active', mode === 'CAR');
+      recalculateTravelPreview();
+    }
+
+    function recalculateTravelPreview() {
+      const transit = calculateDetailedTransitTimes(chosenDistanceKm);
+      const modeInfo = chosenTransitMode === 'WALK' ? transit.walk :
+                       chosenTransitMode === 'CAR' ? transit.fourWheeler : transit.twoWheeler;
+
+      document.getElementById('previewDistText').textContent = chosenDistanceKm + ' km';
+      document.getElementById('previewTravelMins').textContent = modeInfo.durationMins + ' mins';
+      document.getElementById('travelSummaryText').innerHTML = `
+        Estimated travel duration: <strong>${modeInfo.durationMins} mins</strong> by ${modeInfo.label}
+      `;
+    }
+
+    function handleOnboardingSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      // 1. Register User Account
+      const regResult = registerUser({
+        name,
+        email,
+        password,
+        role: activeRole,
+        phone
+      });
+
+      if (!regResult.success) {
+        showToast(regResult.message, 'error');
+        return;
+      }
+
+      if (activeRole === 'VISITOR') {
+        // Book appointment pass for new patient
+        const docId = document.getElementById('regDoctorSelect').value;
+        const complaint = document.getElementById('regComplaint').value || 'General Consultation';
+
+        const booking = bookPatientAppointment({
+          patientName: name,
+          phone,
+          email,
+          doctorId: docId,
+          distanceKm: chosenDistanceKm,
+          transitMode: chosenTransitMode,
+          chosenSlot: chosenSlotTime,
+          complaint
+        });
+
+        // Update active session user with appointment info
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          currentUser.tokenNumber = booking.token.tokenNumber;
+          currentUser.distanceKm = chosenDistanceKm;
+          currentUser.transitMode = chosenTransitMode;
+          currentUser.chiefComplaint = complaint;
+          localStorage.setItem('ql_current_user', JSON.stringify(currentUser));
+        }
+
+        showToast(`Registration Successful! Pass ${booking.token.tokenNumber} issued. Opening Patient App...`, 'success');
+        setTimeout(() => {
+          window.location.href = 'mobile-app.html';
+        }, 800);
+      } else if (activeRole === 'STAFF') {
+        showToast(`Staff Account registered for ${name}! Opening Staff Desk...`, 'success');
+        setTimeout(() => {
+          window.location.href = 'staff-dashboard.html';
+        }, 800);
+      } else if (activeRole === 'DOCTOR') {
+        showToast(`Doctor profile registered for ${name}! Opening Clinical Console...`, 'success');
+        setTimeout(() => {
+          window.location.href = 'doctor-portal.html';
+        }, 800);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUniversalNavAuth();
+      populateDoctorsDropdown();
+      recalculateTravelPreview();
+    });
+  </script>
+</body>
+</html>

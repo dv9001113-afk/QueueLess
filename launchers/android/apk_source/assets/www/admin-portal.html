@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organization Admin Console — QueueLess Multi-Sector Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .sector-tab-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+    .sector-tab-btn {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      box-shadow: var(--shadow-xs);
+    }
+    .sector-tab-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .sector-tab-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 4px 15px rgba(79, 143, 203, 0.2);
+    }
+    @media (max-width: 900px) {
+      .sector-tab-bar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 500px) {
+      .sector-tab-bar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="mobile-app.html" class="nav-link"><i class="fas fa-mobile-alt"></i> Mobile Tracker</a>
+      <a href="staff-dashboard.html" class="nav-link"><i class="fas fa-user-cog"></i> Staff Desk</a>
+      <a href="admin-portal.html" class="nav-link active"><i class="fas fa-landmark"></i> Org Admin</a>
+      <a href="database-live-view.html" class="nav-link"><i class="fas fa-database"></i> Live Database</a>
+      <a href="kiosk-display.html" class="nav-link"><i class="fas fa-tv"></i> Public Kiosk</a>
+      <a href="analytics.html" class="nav-link"><i class="fas fa-chart-line"></i> Analytics</a>
+    </nav>
+
+    <div class="nav-actions" id="navAuthProfileSlot">
+      <!-- Populated by engine.js -->
+    </div>
+  </header>
+
+  <main class="section" style="padding: 2.5rem 0;">
+    <div class="container">
+
+      <!-- Admin Header Banner -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div class="section-pill"><i class="fas fa-shield-alt"></i> Enterprise Organization Administration</div>
+          <h1 style="font-family:'Poppins',sans-serif; font-size:1.85rem; font-weight:800; color:var(--text-primary); margin-bottom:4px;" id="adminOrgTitle">
+            Apex National University — Command Portal
+          </h1>
+          <p style="font-size:0.875rem; color:var(--text-secondary);">
+            Configure departments, service SLAs, assign staff to counters, and switch organization field.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-outline-primary btn-sm" onclick="openModal('addServiceModal')">
+            <i class="fas fa-plus"></i> Add New Department
+          </button>
+          <a href="kiosk-display.html" class="btn btn-primary btn-sm">
+            <i class="fas fa-tv"></i> Open Hall Display
+          </a>
+        </div>
+      </div>
+
+      <!-- Sector Field Switcher Bar -->
+      <div style="margin-bottom:0.75rem; font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+        <i class="fas fa-exchange-alt"></i> Switch Organization Operating Field:
+      </div>
+      <div class="sector-tab-bar">
+        <div class="sector-tab-btn active" id="sectorBtn_UNIVERSITY" onclick="handleSwitchSector('UNIVERSITY')">
+          <div style="font-size:1.2rem; color:var(--primary); margin-bottom:4px;"><i class="fas fa-university"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">University & Higher Ed</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Admissions, Exams, Transcripts</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_PVT_LTD" onclick="handleSwitchSector('PVT_LTD')">
+          <div style="font-size:1.2rem; color:var(--secondary); margin-bottom:4px;"><i class="fas fa-building"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">Private Limited / Corp</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Candidate Interviews, HR, Billing</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_PSU" onclick="handleSwitchSector('PSU')">
+          <div style="font-size:1.2rem; color:var(--accent-mint); margin-bottom:4px;"><i class="fas fa-landmark"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">PSU & Govt Services</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Grievance, Biometrics, Welfare</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_TECH_CORP" onclick="handleSwitchSector('TECH_CORP')">
+          <div style="font-size:1.2rem; color:var(--accent-peach-dark); margin-bottom:4px;"><i class="fas fa-laptop-code"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">Tech Org / IT Park</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Hardware RMA, Cloud Sandboxes</div>
+        </div>
+      </div>
+
+      <!-- Real-Time Operational KPI Grid -->
+      <div class="grid-4" style="margin-bottom:2.5rem;">
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Total Influx Today</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--primary); margin:4px 0;" id="kpiTotalInflux">28 Visitors</div>
+            <div style="font-size:0.75rem; color:var(--accent-mint);"><i class="fas fa-check-circle"></i> 100% 2:1 Interleaved Adherence</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Average Queue SLA</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--accent-mint); margin:4px 0;" id="kpiAvgSla">10.2 mins</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Benchmarked Target: 15.0 mins</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Active Service Counters</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--secondary-dark); margin:4px 0;" id="kpiActiveCounters">4 of 4 Desks</div>
+            <div style="font-size:0.75rem; color:var(--accent-mint);"><i class="fas fa-circle" style="font-size:0.5rem;"></i> All Operators Online</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size:0.75rem; color:var(--text-muted);">No-Show Recovery Rate</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--accent-peach-dark); margin:4px 0;">85.7%</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">2-Chance Penalty Bump Applied</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Department Catalog & SLA Table -->
+      <div class="card" style="margin-bottom:2.5rem;">
+        <div class="card-header">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700;">
+              <i class="fas fa-sitemap" style="color:var(--primary); margin-right:6px;"></i> Active Department & Service Desks
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Current services offered to visitors for this sector</span>
+          </div>
+          <span class="badge badge-green" id="activeSectorBadge">UNIVERSITY CONSORTIUM</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              <thead>
+                <tr style="background:var(--bg-sidebar); border-bottom:1px solid var(--border); color:var(--text-muted); font-size:0.75rem;">
+                  <th style="padding:12px 16px;">Dept Code</th>
+                  <th style="padding:12px 16px;">Service Department Name</th>
+                  <th style="padding:12px 16px;">Avg Handling SLA</th>
+                  <th style="padding:12px 16px;">Emergency Priority</th>
+                  <th style="padding:12px 16px;">Assigned Counter</th>
+                  <th style="padding:12px 16px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminServicesTableBody">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Counter Assignment & Staff Table -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700;">
+              <i class="fas fa-users-cog" style="color:var(--secondary); margin-right:6px;"></i> Counter Staff Roster & Live Status
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Manage operator desk assignments and live session states</span>
+          </div>
+          <a href="staff-dashboard.html" class="btn btn-secondary btn-sm">
+            <i class="fas fa-external-link-alt"></i> Open Operator Console
+          </a>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              <thead>
+                <tr style="background:var(--bg-sidebar); border-bottom:1px solid var(--border); color:var(--text-muted); font-size:0.75rem;">
+                  <th style="padding:12px 16px;">Desk ID</th>
+                  <th style="padding:12px 16px;">Counter Name</th>
+                  <th style="padding:12px 16px;">Operator Staff Member</th>
+                  <th style="padding:12px 16px;">Service Assigned</th>
+                  <th style="padding:12px 16px;">Current Serving</th>
+                  <th style="padding:12px 16px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminCountersTableBody">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: Add Department Service -->
+  <div class="modal-overlay" id="addServiceModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Add Department Service</div>
+        <button class="modal-close" onclick="closeModal('addServiceModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleAddServiceSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Service / Department Name:</label>
+            <input type="text" id="newSrvName" class="form-input" placeholder="e.g., Degree Verification Desk" required />
+          </div>
+          <div class="grid-2" style="gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Service Code:</label>
+              <input type="text" id="newSrvCode" class="form-input" placeholder="e.g., DGV" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target SLA Duration (Mins):</label>
+              <input type="number" id="newSrvDuration" class="form-input" value="10" min="2" max="60" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem;">
+              <input type="checkbox" id="newSrvPriority" checked /> Allow Emergency Priority (Senior Citizen / PWD)
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-plus-circle"></i> Save & Deploy to Queue System
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="formal-footer">
+    <div class="container text-center" style="font-size:0.8rem; color:var(--text-muted);">
+      © 2026 QueueLess Enterprise Administration Console. Multi-Sector Support for Universities, Pvt Ltd Enterprises, PSUs, and Tech Companies.
+    </div>
+  </footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    function renderAdminPortal() {
+      renderUniversalNavAuth();
+      const currentSectorKey = localStorage.getItem('ql_current_sector') || 'UNIVERSITY';
+      const sectorConfig = ORGANIZATION_SECTORS[currentSectorKey] || ORGANIZATION_SECTORS.UNIVERSITY;
+
+      document.getElementById('adminOrgTitle').innerText = `${sectorConfig.badge} — Command Portal`;
+      document.getElementById('activeSectorBadge').innerText = sectorConfig.name.toUpperCase();
+
+      // Sector Tab buttons
+      ['UNIVERSITY', 'PVT_LTD', 'PSU', 'TECH_CORP'].forEach(sec => {
+        const btn = document.getElementById('sectorBtn_' + sec);
+        if (btn) {
+          if (sec === currentSectorKey) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+
+      // Services Table
+      const services = getServices();
+      const srvTbody = document.getElementById('adminServicesTableBody');
+      if (srvTbody) {
+        srvTbody.innerHTML = services.map((s, idx) => `
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:12px 16px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--primary);">${s.code || ('SRV-' + s.id)}</td>
+            <td style="padding:12px 16px;">
+              <div style="font-weight:700; color:var(--text-primary);"><i class="fas ${s.icon || 'fa-check'}"></i> ${s.name}</div>
+            </td>
+            <td style="padding:12px 16px; font-weight:700; color:var(--accent-mint);">${s.avgDuration} mins SLA</td>
+            <td style="padding:12px 16px;">
+              <span class="badge ${s.isPriorityAllowed ? 'badge-green' : 'badge-peach'}">
+                ${s.isPriorityAllowed ? 'Enabled' : 'Disabled'}
+              </span>
+            </td>
+            <td style="padding:12px 16px; color:var(--text-secondary);">Counter ${idx + 1}</td>
+            <td style="padding:12px 16px;">
+              <button class="btn btn-secondary btn-sm" onclick="showToast('SLA settings updated for ${s.name}', 'success')">
+                Configure
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Counters Table
+      const counters = getCounters();
+      const cntTbody = document.getElementById('adminCountersTableBody');
+      if (cntTbody) {
+        cntTbody.innerHTML = counters.map(c => `
+          <tr style="border-bottom:1px solid var(--border-light);">
+            <td style="padding:12px 16px; font-weight:700; color:var(--text-muted);">${c.id}</td>
+            <td style="padding:12px 16px; font-weight:700; color:var(--text-primary);">${c.name}</td>
+            <td style="padding:12px 16px; font-weight:600; color:var(--primary-dark);">${c.staff}</td>
+            <td style="padding:12px 16px; color:var(--text-secondary);">${c.serviceId ? ('Dept ' + c.serviceId) : 'General'}</td>
+            <td style="padding:12px 16px;">
+              <span class="badge ${c.currentToken ? 'badge-blue' : 'badge-green'}">
+                ${c.currentToken || 'IDLE'}
+              </span>
+            </td>
+            <td style="padding:12px 16px;">
+              <span class="badge ${c.status === 'CALLING' ? 'badge-peach' : c.status === 'IN_SERVICE' ? 'badge-blue' : 'badge-green'}">
+                ${c.status}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function handleSwitchSector(sectorKey) {
+      setOrganizationSector(sectorKey, true);
+    }
+
+    function handleAddServiceSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('newSrvName').value;
+      const code = document.getElementById('newSrvCode').value;
+      const duration = Number(document.getElementById('newSrvDuration').value);
+      const isPriority = document.getElementById('newSrvPriority').checked;
+
+      const services = getServices();
+      services.push({
+        id: services.length + 1,
+        name,
+        code,
+        avgDuration: duration,
+        isPriorityAllowed: isPriority,
+        icon: 'fa-layer-group'
+      });
+
+      localStorage.setItem('ql_services', JSON.stringify(services));
+      closeModal('addServiceModal');
+      showToast(`Department "${name}" successfully added to system!`, 'success');
+      renderAdminPortal();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAdminPortal();
+      renderUniversalNavAuth();
+      renderDynamicFooter();
+      onQueueUpdate(() => {
+        renderAdminPortal();
+        renderUniversalNavAuth();
+        renderDynamicFooter();
+      });
+    });
+  </script>
+</body>
+</html>

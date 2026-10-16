@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueueLess — Download Native Packages (.EXE, .APK, .DMG, .IPA)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body style="background:var(--bg-main); min-height:100vh; display:flex; flex-direction:column;">
+
+  <!-- Simple Header -->
+  <header class="navbar">
+    <a href="../index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+    <div>
+      <span class="badge badge-green"><i class="fas fa-check-circle"></i> Compiled Binary Builds Ready</span>
+    </div>
+  </header>
+
+  <main class="section" style="padding: 3.5rem 0;">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-pill"><i class="fas fa-box-open"></i> Native Packages & Installers</div>
+        <h1 class="section-title">Download QueueLess for <span>Every Device</span></h1>
+        <p class="section-subtitle">
+          Direct executable formats (.EXE for Windows, .APK for Android, .DMG for macOS, .IPA for iOS).
+        </p>
+      </div>
+
+      <div class="grid-4" style="gap:1.5rem;">
+
+        <!-- 1. Windows -->
+        <div class="card" style="border-top: 4px solid var(--primary);">
+          <div class="card-body text-center" style="padding:2rem 1.25rem;">
+            <div style="width:60px; height:60px; border-radius:var(--radius-md); background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1.25rem;">
+              <i class="fab fa-windows"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px;">Windows</h3>
+            <span class="badge badge-blue" style="margin-bottom:1rem;">QueueLess.exe</span>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Native compiled Windows executable. Launches in clean standalone app mode without browser tabs or URL bars.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a href="../QueueLess.exe" download class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-download"></i> Download QueueLess.exe
+              </a>
+              <a href="windows/QueueLess-Desktop-App.bat" class="btn btn-secondary btn-sm w-100">
+                <i class="fas fa-play"></i> Run .BAT Launcher
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Android -->
+        <div class="card" style="border-top: 4px solid var(--accent-mint);">
+          <div class="card-body text-center" style="padding:2rem 1.25rem;">
+            <div style="width:60px; height:60px; border-radius:var(--radius-md); background:var(--accent-mint-soft); color:var(--accent-mint); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1.25rem;">
+              <i class="fab fa-android"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px;">Android</h3>
+            <span class="badge badge-green" style="margin-bottom:1rem;">QueueLess.apk</span>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Complete Android Package Archive (.apk) ready to sideload on Android devices or install via PWA WebAPK.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a href="../QueueLess.apk" download class="btn btn-mint btn-sm w-100">
+                <i class="fas fa-download"></i> Download QueueLess.apk
+              </a>
+              <a href="android/QueueLess-Android-App.html" class="btn btn-secondary btn-sm w-100">
+                <i class="fas fa-qrcode"></i> PWA 1-Tap Installer
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Mac -->
+        <div class="card" style="border-top: 4px solid var(--secondary);">
+          <div class="card-body text-center" style="padding:2rem 1.25rem;">
+            <div style="width:60px; height:60px; border-radius:var(--radius-md); background:var(--secondary-soft); color:var(--secondary); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1.25rem;">
+              <i class="fab fa-apple"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px;">macOS (Mac)</h3>
+            <span class="badge badge-purple" style="margin-bottom:1rem;">QueueLess.dmg</span>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Apple Disk Image (.dmg) containing QueueLess.app bundle with executable launcher and Info.plist metadata.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a href="../QueueLess.dmg" download class="btn btn-secondary btn-sm w-100" style="border-color:var(--secondary); color:var(--secondary-dark);">
+                <i class="fas fa-download"></i> Download QueueLess.dmg
+              </a>
+              <a href="mac/QueueLess-Mac.command" class="btn btn-secondary btn-sm w-100">
+                <i class="fas fa-terminal"></i> Run .command Script
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. iOS -->
+        <div class="card" style="border-top: 4px solid var(--accent-peach);">
+          <div class="card-body text-center" style="padding:2rem 1.25rem;">
+            <div style="width:60px; height:60px; border-radius:var(--radius-md); background:var(--accent-peach-soft); color:var(--accent-peach-dark); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1.25rem;">
+              <i class="fab fa-safari"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px;">iOS (iPhone)</h3>
+            <span class="badge badge-peach" style="margin-bottom:1rem;">QueueLess.ipa</span>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              iOS App Archive (.ipa) and Apple Configuration Profile (.mobileconfig) for instant Home Screen installation.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a href="../QueueLess.ipa" download class="btn btn-peach btn-sm w-100">
+                <i class="fas fa-download"></i> Download QueueLess.ipa
+              </a>
+              <a href="ios/QueueLess.mobileconfig" download class="btn btn-secondary btn-sm w-100">
+                <i class="fas fa-id-badge"></i> Download .mobileconfig
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Cross-Platform Compatibility Guide (Crucial Fixes for Android & Mac) -->
+      <div class="card" style="margin-top:2.5rem; border-top: 4px solid var(--primary); background:#FFFFFF;">
+        <div class="card-header" style="background:var(--bg-main);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-tools" style="font-size:1.25rem; color:var(--primary);"></i>
+            <div>
+              <h3 style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700; margin:0;">
+                Platform Execution & Download Compatibility Guide
+              </h3>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">
+                Why Android & Mac need specific permissions and how to run them in under 10 seconds
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:1.75rem;">
+          <div class="grid-2" style="gap:1.5rem;">
+
+            <!-- Android Fix -->
+            <div style="background:var(--bg-sidebar); border-radius:var(--radius-md); padding:1.25rem; border:1px solid var(--border-light);">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span class="badge badge-green"><i class="fab fa-android"></i> Android Solution</span>
+                <strong style="color:var(--text-primary); font-size:0.95rem;">Why APK didn't open & Working Fix:</strong>
+              </div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:12px;">
+                Android OS Package Installer blocks raw zip/web packages with <em>"There was a problem parsing the package"</em> because Android requires Google Play / SDK compiled binary Dalvik bytecode (<code>classes.dex</code>) and cryptographic signing.
+              </p>
+              <div style="background:#FFFFFF; border-radius:var(--radius-sm); padding:10px; font-size:0.8rem; color:var(--text-primary); margin-bottom:12px; border:1px solid var(--border);">
+                <strong>✅ 2 Guaranteed Ways to Run on Android:</strong>
+                <ol style="margin:6px 0 0 16px; padding:0; line-height:1.7;">
+                  <li><strong>Instant 0-Install:</strong> Open <a href="../QueueLess-Standalone-Mobile.html" style="color:var(--primary); font-weight:700;">QueueLess-Standalone-Mobile.html</a> in Chrome. Works 100% offline!</li>
+                  <li><strong>Native Home Screen WebAPK:</strong> Open in Chrome &rarr; Tap <strong>(&vellip;)</strong> menu &rarr; Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>. Android generates a signed native launcher icon!</li>
+                </ol>
+              </div>
+              <a href="../QueueLess-Standalone-Mobile.html" class="btn btn-mint btn-sm w-100">
+                <i class="fas fa-external-link-alt"></i> Open Mobile App Directly on Phone
+              </a>
+            </div>
+
+            <!-- Mac Fix -->
+            <div style="background:var(--bg-sidebar); border-radius:var(--radius-md); padding:1.25rem; border:1px solid var(--border-light);">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span class="badge badge-purple"><i class="fab fa-apple"></i> macOS (Mac) Solution</span>
+                <strong style="color:var(--text-primary); font-size:0.95rem;">Why DMG/Command didn't open & Fix:</strong>
+              </div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.6; margin-bottom:12px;">
+                macOS automatically strips the executable permission bit (<code>+x</code>) when files are downloaded from Windows/Web (gives <em>"no appropriate access privileges"</em>), and Apple Gatekeeper quarantines unsigned binaries.
+              </p>
+              <div style="background:#FFFFFF; border-radius:var(--radius-sm); padding:10px; font-size:0.8rem; color:var(--text-primary); margin-bottom:12px; border:1px solid var(--border);">
+                <strong>✅ 2 Guaranteed Ways to Run on Mac:</strong>
+                <ol style="margin:6px 0 0 16px; padding:0; line-height:1.7;">
+                  <li><strong>One Terminal Command:</strong> Run <code>chmod +x Launch-QueueLess-Mac.command</code> and double click!</li>
+                  <li><strong>Native Safari App:</strong> Double click <code>index.html</code> in Safari &rarr; Click <strong>File &rarr; Add to Dock...</strong>. macOS turns it into a real Mac desktop app!</li>
+                </ol>
+              </div>
+              <a href="mac/QueueLess-Mac.command" download class="btn btn-secondary btn-sm w-100" style="border-color:var(--secondary); color:var(--secondary-dark);">
+                <i class="fas fa-terminal"></i> Download Fixed Mac Launcher (.command)
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Wi-Fi Local Network Server Broadcaster -->
+          <div style="margin-top:1.5rem; background:var(--primary-soft); border-radius:var(--radius-md); padding:1.25rem; border:1.5px solid var(--primary-light);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+                <i class="fas fa-wifi"></i>
+              </div>
+              <div>
+                <strong style="color:var(--primary-dark); font-size:0.95rem;">Host on Local Wi-Fi (Run on Phone, Mac, and PC simultaneously):</strong>
+                <div style="font-size:0.75rem; color:var(--text-secondary);">Double-click <code>start-server.bat</code> on your PC. It prints a local Wi-Fi URL like <code>http://192.168.x.x:5000</code>.</div>
+              </div>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">
+              Any Android phone, iPhone, or Mac connected to the same Wi-Fi can open that URL in their browser and immediately use QueueLess in real-time sync!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:2.5rem;">
+        <a href="../index.html" class="btn btn-secondary btn-lg">
+          <i class="fas fa-arrow-left"></i> Return to QueueLess Web App
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="formal-footer">
+    <div class="container text-center" style="font-size:0.85rem; color:var(--text-muted);">
+      © 2026 QueueLess Management Consortium. Multi-platform native builds compiled for Windows, macOS, Android, and iOS.
+    </div>
+  </footer>
+
+</body>
+</html>

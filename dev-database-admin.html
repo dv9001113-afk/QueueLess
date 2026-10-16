@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer & Database Admin Console — QueueLess Internal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .dev-admin-header {
+      background: linear-gradient(135deg, #090d16, #1e293b);
+      color: #f8fafc;
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .sql-table-container {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .sql-code-block {
+      background: #0f172a;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    .db-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+    .db-table th {
+      background: #f1f5f9;
+      padding: 8px 12px;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 1.5px solid #cbd5e1;
+    }
+    .db-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body style="background:#f8fafc;">
+
+  <!-- Developer Console Header Navbar (Separate and isolated from normal user app) -->
+  <header style="background:#090d16; color:white; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="background:#ef4444; width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800;">
+        <i class="fas fa-terminal"></i>
+      </div>
+      <div>
+        <span style="font-weight:800; font-family:'Poppins',sans-serif; letter-spacing:0.5px; font-size:1.05rem;">QueueLess DB Engine</span>
+        <span class="badge" style="background:#334155; color:#94a3b8; font-size:0.65rem; margin-left:6px;">PROGRAMMER ONLY</span>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="font-size:0.8rem; color:#94a3b8;">
+        <i class="fas fa-user-lock"></i> Dev DBA (admin@univ.edu)
+      </span>
+      <button onclick="logoutUser()" class="btn btn-outline-danger btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+        <i class="fas fa-sign-out-alt"></i> Exit Dev Console
+      </button>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:2rem; padding-bottom:3rem;">
+
+    <div class="dev-admin-header">
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(239, 68, 68, 0.2); color:#fca5a5; padding:2px 10px; border-radius:12px; font-size:0.75rem; font-weight:700; margin-bottom:6px;">
+          <i class="fas fa-shield-alt"></i> INTERNAL DEVELOPER PORTAL (UNLINKED FROM PATIENT/STAFF UI)
+        </div>
+        <h1 style="font-size:1.6rem; font-weight:800; margin:0; color:#fff;">Database Administration & Liquibase Controller</h1>
+        <p style="font-size:0.85rem; color:#94a3b8; margin:4px 0 0;">
+          Direct relational tables control, schema changeset execution, and state debugging for programmers.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-sm btn-outline-primary" style="color:#38bdf8; border-color:#0284c7;" onclick="seedDemoExtraData()">
+          <i class="fas fa-plus"></i> Seed 5 More Patients
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="resetDatabaseToDefault()">
+          <i class="fas fa-sync-alt"></i> Reset DB to Liquibase Defaults
+        </button>
+      </div>
+    </div>
+
+    <!-- Table 1: Hospitals Master Entity -->
+    <div class="sql-table-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="margin:0; font-size:1.1rem; font-weight:700; color:#0f172a;">
+          <i class="fas fa-hospital" style="color:#10b981;"></i> Table 1: `hospitals` (Master Record)
+        </h3>
+        <span class="badge badge-mint" style="font-size:0.7rem;">1 Active Facility</span>
+      </div>
+
+      <div class="sql-code-block">
+        SELECT id, name, department, head_doctor, consultation_room, emergency_phone FROM hospitals WHERE is_active = true;
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Hospital Name</th>
+              <th>Department</th>
+              <th>Head Doctor</th>
+              <th>Address</th>
+              <th>Emergency Hotline</th>
+            </tr>
+          </thead>
+          <tbody id="hospitalsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Table 2: Staff & Doctors Directory -->
+    <div class="sql-table-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="margin:0; font-size:1.1rem; font-weight:700; color:#0f172a;">
+          <i class="fas fa-users-cog" style="color:#0ea5e9;"></i> Table 2: `hospital_staff` (RBAC Staff & Doctors)
+        </h3>
+        <span class="badge badge-blue" id="staffTableCountBadge">3 Personnel</span>
+      </div>
+
+      <div class="sql-code-block">
+        SELECT staff_id, name, role, designation, department, contact_phone, leave_status FROM hospital_staff;
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>Staff ID</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Official Designation</th>
+              <th>Department / Desk</th>
+              <th>Contact Phone</th>
+              <th>Duty Status</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Table 3: Patient Queue & OPD Tokens -->
+    <div class="sql-table-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="margin:0; font-size:1.1rem; font-weight:700; color:#0f172a;">
+          <i class="fas fa-list-ol" style="color:#f59e0b;"></i> Table 3: `patient_queue_tokens` (Live Hospital Roster)
+        </h3>
+        <span class="badge badge-purple" id="tokensTableCountBadge">12 Tokens</span>
+      </div>
+
+      <div class="sql-code-block">
+        SELECT token_number, patient_name, phone, service_code, distance_km, transit_mode, traffic_delay_mins, status FROM patient_queue_tokens ORDER BY priority_score DESC;
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>Token #</th>
+              <th>Patient Name</th>
+              <th>Contact Phone</th>
+              <th>OPD Service</th>
+              <th>Location / Distance</th>
+              <th>Transit Mode</th>
+              <th>Traffic Delay</th>
+              <th>Queue Status</th>
+            </tr>
+          </thead>
+          <tbody id="tokensTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Liquibase Changeset Audit History -->
+    <div class="sql-table-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <h3 style="margin:0; font-size:1.1rem; font-weight:700; color:#0f172a;">
+          <i class="fas fa-history" style="color:#8b5cf6;"></i> Liquibase Migration Audit Log (`DATABASECHANGELOG`)
+        </h3>
+        <span class="badge badge-green" style="font-size:0.7rem;">3 Changesets Executed</span>
+      </div>
+
+      <div style="font-size:0.8rem; color:#64748b; margin-bottom:1rem;">
+        Source directory: <code>backend-java/src/main/resources/db/changelog/</code>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Author</th>
+              <th>Filename</th>
+              <th>Date Executed</th>
+              <th>MD5 Checksum</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>001-create-master-tables</code></td>
+              <td>queueless-architect</td>
+              <td>changelog-master.xml</td>
+              <td>2026-10-16 10:00:00</td>
+              <td><code>9:a71c88e99b0c2a71f</code></td>
+              <td>Creates core tables: hospitals, hospital_staff, services, counters, queue_tokens</td>
+            </tr>
+            <tr>
+              <td><code>002-insert-hospital-seed</code></td>
+              <td>queueless-architect</td>
+              <td>changelog-master.xml</td>
+              <td>2026-10-16 10:00:01</td>
+              <td><code>9:b82d99f00c1d3b82e</code></td>
+              <td>Inserts Apex Hospital master facility, Dr. Sarah Mehta, and Sister Priya Nair</td>
+            </tr>
+            <tr>
+              <td><code>003-create-queue-indices</code></td>
+              <td>queueless-architect</td>
+              <td>changelog-master.xml</td>
+              <td>2026-10-16 10:00:02</td>
+              <td><code>9:c93e00a11d2e4c93d</code></td>
+              <td>Creates B-Tree indices on (status, token_type, client_delay_mins) for 2:1 dispatch</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer style="background:#090d16; color:#64748b; padding:1.5rem; text-align:center; font-size:0.78rem;">
+    QueueLess Developer Console • Spring Boot & Liquibase Integration • Not for End-User Deployment
+  </footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Guard: Only ADMIN allowed
+      const user = enforceRoleAccess(['ADMIN']);
+      if (!user) return;
+
+      renderTables();
+    });
+
+    function renderTables() {
+      // 1. Hospital
+      const hosp = DEFAULT_HOSPITAL;
+      document.getElementById('hospitalsTableBody').innerHTML = `
+        <tr>
+          <td><code>${hosp.id}</code></td>
+          <td><strong>${hosp.name}</strong></td>
+          <td>${hosp.department}</td>
+          <td>${hosp.headDoctor}</td>
+          <td>${hosp.address}</td>
+          <td>${hosp.emergencyPhone}</td>
+        </tr>
+      `;
+
+      // 2. Staff
+      const users = getUsers();
+      const staffList = users.filter(u => u.role === 'STAFF' || u.role === 'DOCTOR');
+      document.getElementById('staffTableCountBadge').textContent = `${staffList.length} Personnel`;
+      document.getElementById('staffTableBody').innerHTML = staffList.map(s => `
+        <tr>
+          <td><code>${s.staffId || s.id}</code></td>
+          <td><strong>${s.name}</strong></td>
+          <td><span class="badge ${s.role === 'DOCTOR' ? 'badge-purple' : 'badge-blue'}">${s.role}</span></td>
+          <td>${s.designation || 'Staff Officer'}</td>
+          <td>${s.department || 'OPD Desk'}</td>
+          <td>${s.phone || 'N/A'}</td>
+          <td><span class="badge ${s.leaveStatus === 'ON_LEAVE' ? 'badge-peach' : 'badge-mint'}">${s.leaveStatus || 'ON_DUTY'}</span></td>
+        </tr>
+      `).join('');
+
+      // 3. Tokens
+      const tokens = getTokens();
+      document.getElementById('tokensTableCountBadge').textContent = `${tokens.length} Tokens`;
+      document.getElementById('tokensTableBody').innerHTML = tokens.map(t => `
+        <tr>
+          <td><code>${t.tokenNumber}</code></td>
+          <td>${t.userName}</td>
+          <td>${t.userPhone}</td>
+          <td>${t.serviceName || 'General OPD'}</td>
+          <td>${t.userLocation || (t.distanceKm ? t.distanceKm + ' km' : 'City')}</td>
+          <td>${t.transitMode || 'TWO_WHEELER'}</td>
+          <td>${(t.clientReportedDelayMins || 0) > 0 ? `+${t.clientReportedDelayMins}m` : '0m'}</td>
+          <td><span class="badge ${t.status === 'COMPLETED' ? 'badge-mint' : t.status === 'IN_SERVICE' ? 'badge-green' : 'badge-blue'}">${t.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function seedDemoExtraData() {
+      const tokens = getTokens();
+      const demoNames = [
+        { name: 'Kavita Joshi', phone: '+91 98777 88990', complaint: 'Pre-Op ECG Review', dist: 3.2, mode: 'CAR' },
+        { name: 'Harshvardhan Singh', phone: '+91 98888 99001', complaint: 'Diabetic Foot & Blood Sugar', dist: 1.8, mode: 'TWO_WHEELER' },
+        { name: 'Meenakshi Iyer', phone: '+91 98999 00112', complaint: 'Post-CABG Follow Up', dist: 5.0, mode: 'CAR' },
+        { name: 'Deepak Chopra', phone: '+91 98111 22334', complaint: 'Chest Discomfort during exertion', dist: 2.1, mode: 'EBIKE' },
+        { name: 'Sunita Mehra', phone: '+91 98222 44556', complaint: 'Arrhythmia Holter Monitoring', dist: 0.9, mode: 'WALK' }
+      ];
+
+      demoNames.forEach((d, idx) => {
+        const nextNum = 105 + tokens.length + idx;
+        tokens.push({
+          id: Date.now() + idx,
+          tokenNumber: `MED-${nextNum}`,
+          userName: d.name,
+          userPhone: d.phone,
+          serviceId: 1,
+          serviceName: 'Cardiology & Internal Medicine OPD',
+          counterId: 1,
+          tokenType: 'APPOINTMENT',
+          status: 'QUEUED',
+          perspective: d.complaint,
+          userLocation: `Zone ${idx + 1} (${d.dist} km away)`,
+          distanceKm: d.dist,
+          transitMode: d.mode,
+          slotTime: '11:30 AM',
+          checkInTime: '10:55 AM',
+          calledAt: null,
+          completedAt: null,
+          missedCount: 0,
+          createdAt: new Date().toISOString()
+        });
+      });
+
+      saveTokens(tokens);
+      showToast('Seeded 5 new patients into Database table!', 'success');
+      renderTables();
+    }
+
+    function resetDatabaseToDefault() {
+      if (confirm('Are you sure you want to re-seed all tables to clean Liquibase defaults?')) {
+        localStorage.clear();
+        initQueueStorage();
+        showToast('Database reset to clean Liquibase migration baseline!', 'info');
+        setTimeout(() => location.reload(), 500);
+      }
+    }
+  </script>
+</body>
+</html>

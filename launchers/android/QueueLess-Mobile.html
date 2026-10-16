@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#10b981" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>QueueLess — Hospital OPD Smart Dispatch Mobile App</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    body {
+      background: #f8fafc;
+      padding-bottom: 74px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-topbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .install-bar {
+      background: linear-gradient(135deg, #10b981, #0ea5e9);
+      color: white;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .mobile-bottom-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: #94a3b8;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+    }
+    .tab-btn.active {
+      color: #10b981;
+      transform: translateY(-2px);
+    }
+    .tab-btn.active i {
+      color: #10b981;
+      transform: scale(1.15);
+    }
+    .tab-btn i {
+      font-size: 1.2rem;
+      transition: all 0.2s ease;
+    }
+    .view-container {
+      display: none;
+      padding: 1rem;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .view-container.active {
+      display: block;
+      animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Android Install Banner -->
+  <div class="install-bar" id="installBanner">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <i class="fab fa-android" style="font-size:1.1rem;"></i>
+      <span>Install QueueLess as Native App on Android Phone!</span>
+    </div>
+    <button class="btn btn-sm" style="background:#ffffff; color:#065f46; font-weight:800; padding:4px 10px; font-size:0.72rem; border-radius:20px;" onclick="promptPwaInstall()">
+      <i class="fas fa-download"></i> Add to Home Screen
+    </button>
+  </div>
+
+  <!-- App Header -->
+  <header class="app-topbar">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, #10b981, #0ea5e9); color:white; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+        <i class="fas fa-hospital"></i>
+      </div>
+      <div>
+        <div style="font-family:'Poppins',sans-serif; font-weight:800; font-size:1.05rem; line-height:1.2; color:#0f172a;">
+          Queue<span class="animated-gradient-text">Less</span>
+        </div>
+        <div style="font-size:0.65rem; color:#64748b; font-weight:600;">Apex Hospital OPD</div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:6px;">
+      <span class="badge badge-mint" style="font-size:0.65rem;"><span class="pulse-dot"></span> Live Sync</span>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- VIEW 1: PATIENT OPD TRACKER (DEFAULT VIEW) -->
+  <!-- ========================================== -->
+  <section class="view-container active" id="viewPatient">
+    
+    <!-- Emergency Notice Banner -->
+    <div id="mPatientEmergencyBanner" style="display:none; background:#fff1f2; border:1px solid #fecdd3; border-radius:14px; padding:10px 12px; margin-bottom:12px; color:#9f1239; font-size:0.8rem; align-items:center; gap:8px;">
+      <i class="fas fa-ambulance" style="color:#ef4444; font-size:1.3rem;"></i>
+      <div><strong>Hospital Emergency Override:</strong> OPD appointments postponed by +12 mins.</div>
+    </div>
+
+    <!-- Active Ticket Card -->
+    <div class="soft-glass-card" style="padding:1.25rem; margin-bottom:1rem; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="badge badge-purple" style="font-size:0.7rem;">OPD PASS</span>
+        <span class="badge badge-green" id="mTokenBadge">QUEUED</span>
+      </div>
+
+      <div class="animated-gradient-text" style="font-size:3.2rem; font-weight:800; font-family:'Poppins',sans-serif; margin:0.35rem 0;" id="mTokenNum">
+        MED-101
+      </div>
+
+      <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin-bottom:2px;" id="mPatientName">Aarav Sharma</h3>
+      <p style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">Cardiology & Internal Medicine OPD • Room 101</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:10px;">
+        <div style="background:#f1f5f9; padding:8px; border-radius:10px;">
+          <div style="font-size:1.15rem; font-weight:800; color:#0ea5e9;" id="mAheadCount">0</div>
+          <div style="font-size:0.62rem; color:#64748b;">Ahead in Turn</div>
+        </div>
+        <div style="background:#f1f5f9; padding:8px; border-radius:10px;">
+          <div style="font-size:1.15rem; font-weight:800; color:#10b981;" id="mWaitMins">~0m</div>
+          <div style="font-size:0.62rem; color:#64748b;">Est. Wait Time</div>
+        </div>
+        <div style="background:#f1f5f9; padding:8px; border-radius:10px;">
+          <div style="font-size:1.15rem; font-weight:800; color:#8b5cf6;" id="mCallTime">10:45 AM</div>
+          <div style="font-size:0.62rem; color:#64748b;">Est. Call</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Departure Alarm Banner -->
+    <div style="background:linear-gradient(135deg, #065f46, #047857); color:white; border-radius:16px; padding:1.2rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:0.68rem; font-weight:700; color:#a7f3d0; text-transform:uppercase;">
+          <i class="fas fa-bell"></i> RECOMMENDED DEPARTURE TIME
+        </div>
+        <div style="font-size:1.6rem; font-weight:800; font-family:'Poppins',sans-serif;" id="mDepartureTime">
+          10:35 AM
+        </div>
+        <div style="font-size:0.72rem; color:#d1fae5;">
+          Depart by 2-Wheeler to arrive right as your turn is called!
+        </div>
+      </div>
+      <div style="font-size:2rem; opacity:0.85;">
+        <i class="fas fa-clock float-element"></i>
+      </div>
+    </div>
+
+    <!-- Location & Travel Mode Selector -->
+    <div class="soft-glass-card" style="padding:1rem; margin-bottom:1rem;">
+      <label style="font-size:0.72rem; font-weight:700; color:#0f172a; display:block; margin-bottom:4px;">
+        <i class="fas fa-crosshairs" style="color:#10b981;"></i> Your Live Location (Select to update travel duration):
+      </label>
+      <select id="mSelectLocation" class="form-input" style="padding:8px; font-size:0.78rem;" onchange="onMobileLocationChange()">
+        <option value="2.8|Connaught Place, Central Zone">Connaught Place (2.8 km away)</option>
+        <option value="1.2|South Extension, South Zone">South Extension (1.2 km away)</option>
+        <option value="4.5|Karol Bagh, West Zone">Karol Bagh (4.5 km away)</option>
+        <option value="12.0|Noida Sector 18, East Zone">Noida Sector 18 (12.0 km away)</option>
+      </select>
+
+      <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-top:10px;">
+        <button class="btn btn-sm btn-outline-primary" style="padding:6px 2px; font-size:0.65rem; border-radius:10px;" onclick="setMobileMode('WALK')">
+          <i class="fas fa-walking" style="display:block; font-size:0.9rem; margin-bottom:2px;"></i> Walk
+        </button>
+        <button class="btn btn-sm btn-outline-primary" style="padding:6px 2px; font-size:0.65rem; border-radius:10px;" onclick="setMobileMode('CYCLE')">
+          <i class="fas fa-bicycle" style="display:block; font-size:0.9rem; margin-bottom:2px;"></i> Cycle
+        </button>
+        <button class="btn btn-sm btn-outline-primary" style="padding:6px 2px; font-size:0.65rem; border-radius:10px;" onclick="setMobileMode('EBIKE')">
+          <i class="fas fa-bolt" style="display:block; font-size:0.9rem; margin-bottom:2px;"></i> E-Bike
+        </button>
+        <button class="btn btn-sm btn-primary" style="padding:6px 2px; font-size:0.65rem; border-radius:10px;" onclick="setMobileMode('TWO_WHEELER')">
+          <i class="fas fa-motorcycle" style="display:block; font-size:0.9rem; margin-bottom:2px;"></i> Bike
+        </button>
+        <button class="btn btn-sm btn-outline-primary" style="padding:6px 2px; font-size:0.65rem; border-radius:10px;" onclick="setMobileMode('CAR')">
+          <i class="fas fa-car" style="display:block; font-size:0.9rem; margin-bottom:2px;"></i> Cab
+        </button>
+      </div>
+    </div>
+
+    <!-- Traffic Delay Reporter Button -->
+    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:0.8rem; font-weight:700; color:#9a3412;">Stuck in Traffic?</div>
+        <div style="font-size:0.68rem; color:#7c2d12;">Notify hospital to hold your slot</div>
+      </div>
+      <button class="btn btn-peach btn-sm" style="font-size:0.75rem; padding:6px 10px; font-weight:700;" onclick="reportTrafficDelay()">
+        <i class="fas fa-traffic-light"></i> +10m Traffic Delay
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ========================================== -->
+  <!-- VIEW 2: FLOOR STAFF CALLING DESK           -->
+  <!-- ========================================== -->
+  <section class="view-container" id="viewStaff">
+    <div class="soft-glass-card" style="padding:1.25rem; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div>
+          <h2 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin:0;">OPD Calling Desk 1</h2>
+          <span style="font-size:0.75rem; color:#64748b;">Sister Priya Nair (Floor Coordinator)</span>
+        </div>
+        <span class="badge badge-mint">ON DUTY</span>
+      </div>
+
+      <div style="background:#f8fafc; border-radius:12px; padding:12px; text-align:center; margin:10px 0;">
+        <div style="font-size:0.72rem; color:#64748b;">Currently In Doctor Room 101</div>
+        <div style="font-size:2.4rem; font-weight:800; color:#0f172a; font-family:'Poppins',sans-serif;" id="mStaffActiveToken">
+          MED-101
+        </div>
+        <div style="font-size:0.82rem; font-weight:700; color:#1e293b;" id="mStaffActivePatient">Aarav Sharma</div>
+      </div>
+
+      <button class="btn btn-primary w-100" style="padding:12px; font-size:0.92rem; font-weight:700;" onclick="staffCallNextPatient()">
+        <i class="fas fa-bullhorn"></i> Call Next Patient from To-Do List
+      </button>
+    </div>
+
+    <!-- Dynamic To-Do List -->
+    <div class="soft-glass-card" style="padding:1rem;">
+      <div style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;">
+        <i class="fas fa-clipboard-list" style="color:#0ea5e9;"></i> Dynamic OPD Waiting List
+      </div>
+      <div id="mStaffTodoList" style="display:flex; flex-direction:column; gap:8px;">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- VIEW 3: HEAD DOCTOR CLINICAL CONSOLE       -->
+  <!-- ========================================== -->
+  <section class="view-container" id="viewDoctor">
+    <div class="soft-glass-card" style="padding:1.25rem; margin-bottom:1rem; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="badge badge-purple">CONSULTATION ROOM 101</span>
+        <span class="badge badge-green">IN SESSION</span>
+      </div>
+
+      <div style="margin:1rem 0 0.5rem;">
+        <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">
+          10-Minute Consultation Countdown
+        </div>
+        <div style="font-size:3.5rem; font-weight:800; font-family:'Poppins',monospace; color:#0f172a;" id="mDoctorTimer">
+          10:00
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:center; margin-bottom:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="doctorAddExtension(5)">
+          <i class="fas fa-plus"></i> +5 Min Extension
+        </button>
+        <button class="btn btn-outline-danger btn-sm" onclick="doctorToggleEmergency()">
+          <i class="fas fa-ambulance"></i> Emergency Override
+        </button>
+      </div>
+
+      <button class="btn btn-success w-100" style="padding:12px; font-weight:700;" onclick="doctorCompleteAndNext()">
+        <i class="fas fa-check-double"></i> Complete & Call Next Patient
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- BOTTOM NAVIGATION TABS                     -->
+  <!-- ========================================== -->
+  <nav class="mobile-bottom-tabs">
+    <button class="tab-btn active" id="tabPatientBtn" onclick="switchMobileTab('patient')">
+      <i class="fas fa-mobile-alt"></i>
+      <span>Patient</span>
+    </button>
+    <button class="tab-btn" id="tabStaffBtn" onclick="switchMobileTab('staff')">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Staff Desk</span>
+    </button>
+    <button class="tab-btn" id="tabDoctorBtn" onclick="switchMobileTab('doctor')">
+      <i class="fas fa-stethoscope"></i>
+      <span>Doctor</span>
+    </button>
+  </nav>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    let activeMobileTab = 'patient';
+    let docCountdown = 600;
+    let docTimerInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      syncMobileApp();
+      startDocTimer();
+
+      if (typeof BroadcastChannel !== 'undefined' && broadcastChannel) {
+        broadcastChannel.onmessage = () => {
+          syncMobileApp();
+        };
+      }
+    });
+
+    function switchMobileTab(tab) {
+      activeMobileTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+
+      if (tab === 'patient') {
+        document.getElementById('tabPatientBtn').classList.add('active');
+        document.getElementById('viewPatient').classList.add('active');
+      } else if (tab === 'staff') {
+        document.getElementById('tabStaffBtn').classList.add('active');
+        document.getElementById('viewStaff').classList.add('active');
+      } else if (tab === 'doctor') {
+        document.getElementById('tabDoctorBtn').classList.add('active');
+        document.getElementById('viewDoctor').classList.add('active');
+      }
+
+      syncMobileApp();
+    }
+
+    function syncMobileApp() {
+      const state = getHospitalState();
+      const dynamicQueue = getDynamicHospitalQueue();
+      const tokens = getTokens();
+
+      // Emergency status
+      const emrBanner = document.getElementById('mPatientEmergencyBanner');
+      if (emrBanner) {
+        emrBanner.style.display = state.emergencyActive ? 'flex' : 'none';
+      }
+
+      // 1. Patient View
+      const activePatient = tokens.find(t => t.tokenNumber === (state.currentPatientToken || 'MED-101')) || tokens[0];
+      if (activePatient) {
+        document.getElementById('mTokenNum').textContent = activePatient.tokenNumber;
+        document.getElementById('mPatientName').textContent = activePatient.userName;
+      }
+
+      const qPos = dynamicQueue.findIndex(q => q.tokenNumber === (activePatient ? activePatient.tokenNumber : ''));
+      const ahead = qPos === -1 ? 0 : qPos;
+      document.getElementById('mAheadCount').textContent = ahead;
+      const wait = (ahead * 10) + (state.emergencyActive ? 12 : 0) + (state.doctorExtendedMins || 0);
+      document.getElementById('mWaitMins').textContent = `~${wait}m`;
+
+      const now = new Date();
+      const call = new Date(now.getTime() + wait * 60000);
+      document.getElementById('mCallTime').textContent = call.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Departure: call time minus 5m bike transit
+      const departure = new Date(call.getTime() - 5 * 60000);
+      document.getElementById('mDepartureTime').textContent = departure.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // 2. Staff View
+      document.getElementById('mStaffActiveToken').textContent = state.currentPatientToken || 'READY';
+      document.getElementById('mStaffActivePatient').textContent = activePatient ? activePatient.userName : 'No Patient';
+
+      const staffListEl = document.getElementById('mStaffTodoList');
+      if (staffListEl) {
+        if (dynamicQueue.length === 0) {
+          staffListEl.innerHTML = '<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:1rem;">All patients completed!</div>';
+        } else {
+          staffListEl.innerHTML = dynamicQueue.map((p, i) => `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">#${i+1} ${p.tokenNumber}</span> — <span style="font-size:0.8rem; font-weight:700;">${p.userName}</span>
+                <div style="font-size:0.68rem; color:#64748b;">ETA: ${p.estimatedCallTime || 'Next'} • ${p.userLocation || '2.8 km'}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="padding:4px 8px; font-size:0.7rem;" onclick="callPatientNow('${p.tokenNumber}', '${p.userName}')">Call</button>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function startDocTimer() {
+      if (docTimerInterval) clearInterval(docTimerInterval);
+      docTimerInterval = setInterval(() => {
+        if (docCountdown > 0) {
+          docCountdown--;
+          const m = Math.floor(docCountdown / 60);
+          const s = docCountdown % 60;
+          document.getElementById('mDoctorTimer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+      }, 1000);
+    }
+
+    function doctorAddExtension(mins) {
+      extendDoctorConsultation(mins);
+      docCountdown += mins * 60;
+      showToast(`Added +${mins}m extension. Queue updated!`, 'info');
+      syncMobileApp();
+    }
+
+    function doctorToggleEmergency() {
+      const state = getHospitalState();
+      if (state.emergencyActive) {
+        clearHospitalEmergency();
+        showToast('Emergency cleared.', 'success');
+      } else {
+        triggerHospitalEmergency('Acute Cardiac Trauma');
+        showToast('Emergency declared: +12m delay applied!', 'warning');
+      }
+      syncMobileApp();
+    }
+
+    function doctorCompleteAndNext() {
+      playAudioChime();
+      staffCallNextPatient();
+      docCountdown = 600;
+    }
+
+    function staffCallNextPatient() {
+      playAudioChime();
+      const q = getDynamicHospitalQueue();
+      if (q.length > 0) {
+        callPatientNow(q[0].tokenNumber, q[0].userName);
+      } else {
+        showToast('No more waiting patients.', 'info');
+      }
+    }
+
+    function callPatientNow(tok, name) {
+      playAudioChime();
+      announceToken(tok, 'OPD Room 101');
+      const state = getHospitalState();
+      state.currentPatientToken = tok;
+      saveHospitalState(state);
+      showToast(`Called Token ${tok} (${name})!`, 'success');
+      syncMobileApp();
+    }
+
+    function reportTrafficDelay() {
+      const state = getHospitalState();
+      reportClientTransitDelay(state.currentPatientToken || 'MED-101', 10);
+      showToast('Reported +10m traffic delay. Queue safely adjusted!', 'warning');
+      syncMobileApp();
+    }
+
+    function onMobileLocationChange() {
+      showToast('Live location updated. Recalculated transit times.', 'info');
+      syncMobileApp();
+    }
+
+    function setMobileMode(mode) {
+      showToast(`Travel mode set to ${mode}`, 'info');
+      syncMobileApp();
+    }
+
+    function promptPwaInstall() {
+      showToast('Tap browser menu (⋮) -> "Add to Home screen" to install QueueLess App on your phone!', 'success');
+    }
+  </script>
+</body>
+</html>

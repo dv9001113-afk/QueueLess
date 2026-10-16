@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueueLess — Smart Appointment Dispatch & Virtual Visit Pass System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .hero-metric-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-xs);
+    }
+    .accordion-item {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .accordion-header {
+      padding: 1.15rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      user-select: none;
+    }
+    .accordion-header:hover {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+    }
+    .accordion-body {
+      padding: 0 1.5rem 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      display: none;
+      border-top: 1px solid var(--border-light);
+      padding-top: 1rem;
+    }
+    .accordion-item.active .accordion-body {
+      display: block;
+    }
+    .accordion-item.active .accordion-icon {
+      transform: rotate(180deg);
+    }
+    .accordion-icon {
+      transition: transform 0.25s ease;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Navbar (Adapts dynamically per logged-in role) -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a>
+      <a href="mobile-app.html" class="nav-link"><i class="fas fa-mobile-alt"></i> Client Portal</a>
+      <a href="staff-dashboard.html" class="nav-link"><i class="fas fa-user-tie"></i> Staff Desk</a>
+      <a href="admin-portal.html" class="nav-link"><i class="fas fa-landmark"></i> Org Admin</a>
+      <a href="database-live-view.html" class="nav-link"><i class="fas fa-database"></i> Live Database</a>
+      <a href="kiosk-display.html" class="nav-link"><i class="fas fa-tv"></i> Waiting Display</a>
+    </nav>
+
+    <div class="nav-actions">
+      <span id="globalOrgSectorBadge" class="badge badge-peach" style="font-size:0.75rem;"></span>
+      <div id="navAuthProfileSlot" style="display:inline-flex; align-items:center;"></div>
+    </div>
+  </header>
+
+  <!-- Hero Section with Interactive Live Status & Quick Pass Widget -->
+  <section class="hero-section" style="padding: 3.5rem 0 4rem; background: linear-gradient(180deg, #F9FBFE 0%, #FFFFFF 100%);">
+    <div class="container">
+      <div class="grid-2" style="align-items:center; gap:3rem;">
+        
+        <!-- Left Hero Content -->
+        <div>
+          <div class="section-pill scroll-animate in-view">
+            <i class="fas fa-bolt" style="color:var(--accent-peach);"></i> Virtual Appointment & Fair Turn Dispatch
+          </div>
+          
+          <h1 class="hero-title in-view" style="font-family:'Outfit','Poppins',sans-serif; font-size:2.85rem; font-weight:900; line-height:1.18; margin:0.75rem 0; letter-spacing:-0.5px;">
+            Never Wait in Hospital Lines.<br />
+            <span id="heroAnimatedWord" class="animated-gradient-text" style="font-family:'Outfit',sans-serif; display:inline-block; transition:all 0.3s ease;">Zero Waiting Lines</span>
+          </h1>
+
+          <p class="hero-subtitle in-view" style="font-size:1.02rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+            Hospital OPD dispatch system with 3 dedicated portals: <strong>Chief Doctor Desk</strong> (10-min countdown timer & extensions), <strong>Floor Staff Desk</strong> (dynamic To-Do list order with chime call), and <strong>Patient Mobile Tracker</strong> (transit travel calculations & departure alarms).
+          </p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1.5rem;">
+            <a href="mobile-app.html" class="btn btn-mint btn-soft-glow" style="padding:11px 20px; font-size:0.92rem; font-weight:700;">
+              <i class="fas fa-mobile-alt"></i> Patient Tracker
+            </a>
+            <a href="staff-dashboard.html" class="btn btn-secondary" style="padding:11px 20px; font-size:0.92rem; font-weight:700;">
+              <i class="fas fa-clipboard-list"></i> Staff Calling Desk
+            </a>
+            <a href="doctor-portal.html" class="btn btn-primary" style="padding:11px 20px; font-size:0.92rem; font-weight:700;">
+              <i class="fas fa-stethoscope"></i> Doctor Console
+            </a>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:0.5rem;">
+            <div class="hero-metric-badge" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d;">
+              <i class="fab fa-windows" style="color:#0ea5e9;"></i> Windows: Open <code>DOUBLE-CLICK-TO-RUN-ON-WINDOWS.bat</code>
+            </div>
+            <div class="hero-metric-badge" style="background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1;">
+              <i class="fab fa-whatsapp" style="color:#10b981;"></i> Android: Share <code>QueueLess-Android-App.html</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Live Active Turn Status Ticker Widget -->
+        <div class="scroll-animate in-view">
+          <div class="live-board-preview" style="box-shadow: 0 15px 35px rgba(79, 143, 203, 0.15);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border-light);">
+              <div>
+                <h3 style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:700; color:var(--text-primary); margin:0;">
+                  <i class="fas fa-broadcast-tower" style="color:var(--primary); margin-right:6px;"></i> Active Consultation Desks
+                </h3>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Real-time dispatch board across active counters</span>
+              </div>
+              <span class="badge badge-green"><span class="pulse-dot"></span> LIVE SYNC</span>
+            </div>
+
+            <div id="heroCounterSlots">
+              <!-- Dynamically Populated by engine.js -->
+            </div>
+
+            <div style="background:var(--bg-sidebar); border-radius:var(--radius-sm); padding:10px 14px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:1rem;">
+              <span style="color:var(--text-secondary);"><i class="fas fa-user-clock" style="color:var(--primary); margin-right:6px;"></i> Next in Turn: <strong id="heroNextInLine" style="color:var(--primary-dark);">P-301 (Emergency Priority)</strong></span>
+              <a href="staff-dashboard.html" class="btn btn-outline-primary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+                Open Staff Desk <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: Interactive Travel Mode Estimator (Walk, 2-Wheeler, Car, E-Bike, Cycle) -->
+  <section class="section" id="transitSection" style="background:#F7FAFD; border-top:1px solid var(--border-light); border-bottom:1px solid var(--border-light);">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <div class="section-pill"><i class="fas fa-route"></i> Travel & Location Time Assistant</div>
+        <h2 class="section-title scroll-zoom-header">How Will You <span>Reach Your Appointment?</span></h2>
+        <p class="section-subtitle">
+          Select your travel mode to calculate your realistic travel time based on your distance, with recommended departure time and arrival buffer.
+        </p>
+      </div>
+
+      <div class="card scroll-animate" style="max-width:900px; margin:0 auto; padding:1.75rem;">
+        
+        <!-- Mode Selector Bar -->
+        <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">
+          Select Your Travel Mode:
+        </div>
+        <div class="mode-selector-group">
+          <div class="mode-pill-btn active" id="modeBtn_WALK" onclick="setInteractiveTravelMode('WALK')">
+            <i class="fas fa-walking mode-pill-icon" style="color:var(--primary);"></i>
+            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">Walk</div>
+            <div style="font-size:0.65rem; color:var(--text-muted);">10–12m/km</div>
+          </div>
+
+          <div class="mode-pill-btn" id="modeBtn_TWO_WHEELER" onclick="setInteractiveTravelMode('TWO_WHEELER')">
+            <i class="fas fa-motorcycle mode-pill-icon" style="color:var(--accent-peach);"></i>
+            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">2-Wheeler</div>
+            <div style="font-size:0.65rem; color:var(--text-muted);">1.5–2m/km</div>
+          </div>
+
+          <div class="mode-pill-btn" id="modeBtn_CAR" onclick="setInteractiveTravelMode('CAR')">
+            <i class="fas fa-car mode-pill-icon" style="color:var(--primary-dark);"></i>
+            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">Car / Cab</div>
+            <div style="font-size:0.65rem; color:var(--text-muted);">1.5–2m/km</div>
+          </div>
+
+          <div class="mode-pill-btn" id="modeBtn_CYCLE" onclick="setInteractiveTravelMode('CYCLE')">
+            <i class="fas fa-bicycle mode-pill-icon" style="color:var(--accent-mint);"></i>
+            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">Bicycle</div>
+            <div style="font-size:0.65rem; color:var(--text-muted);">5–6m/km</div>
+          </div>
+
+          <div class="mode-pill-btn" id="modeBtn_EBIKE" onclick="setInteractiveTravelMode('EBIKE')">
+            <i class="fas fa-bolt mode-pill-icon" style="color:var(--secondary);"></i>
+            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">E-Bike</div>
+            <div style="font-size:0.65rem; color:var(--text-muted);">2–3m/km</div>
+          </div>
+        </div>
+
+        <!-- Distance Slider Control -->
+        <div style="margin:1.75rem 0 1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <label style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">
+              Distance to Destination Center: <span id="interactiveDistDisplay" style="color:var(--primary); font-size:1.1rem;">1.2 km</span>
+            </label>
+            <button class="btn btn-outline-primary btn-sm" onclick="handleDetectMyLocation()" style="padding:4px 10px; font-size:0.75rem;">
+              <i class="fas fa-crosshairs"></i> Use My GPS Location (One-time)
+            </button>
+          </div>
+          <input type="range" id="interactiveDistSlider" min="0.2" max="10.0" step="0.2" value="1.2" style="width:100%; accent-color:var(--primary);" oninput="handleDistanceSliderChange(this.value)" />
+        </div>
+
+        <!-- Output Metric Result Box -->
+        <div style="background:var(--bg-sidebar); border-radius:var(--radius-md); padding:1.25rem; display:grid; grid-template-columns: repeat(3, 1fr); gap:1.25rem; text-align:center;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Estimated Travel Duration</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--primary);" id="interactiveDurationResult">12–14 mins</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary);" id="interactiveModeNameDisplay">Walking on Foot</div>
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Recommended Departure</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--accent-mint);" id="interactiveDepartureResult">Leave Now</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Includes 3m check-in buffer</div>
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Arrival Proximity Status</div>
+            <div style="font-size:1.6rem; font-weight:800; color:var(--secondary);" id="interactiveProximityResult">Neighborhood</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Ready to approach</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem; font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <i class="fas fa-shield-alt" style="color:var(--accent-mint);"></i>
+          <span>Privacy Guaranteed: Your location is evaluated locally in your browser strictly to calculate travel duration. It is never stored or tracked.</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: 4-Pillar Application Portals (Role-Based Gateways) -->
+  <section class="section" style="background:#FFFFFF;">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <div class="section-pill"><i class="fas fa-th-large"></i> Role-Based Gateways</div>
+        <h2 class="section-title scroll-zoom-header">Three Distinct Portals <span>Built for Your Role</span></h2>
+        <p class="section-subtitle">
+          Every stakeholder gets a tailored experience: Clients manage passes and transit; Staff handle client to-do lists; Admins approve requests and manage attendance.
+        </p>
+      </div>
+
+      <div class="grid-3" style="gap:2rem;">
+        
+        <!-- Portal 1: Client Portal -->
+        <div class="card scroll-animate" style="border-top:4px solid var(--primary);">
+          <div class="card-body" style="padding:2rem 1.5rem; text-align:center;">
+            <div style="width:64px; height:64px; border-radius:50%; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1.25rem;">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:700; margin-bottom:8px;">1. Client Portal</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Find nearby organizations across Tech, Colleges, and Hospitals. Apply with 4-priority filters, get your QR visit pass, and track live turn notifications.
+            </p>
+            <a href="mobile-app.html" class="btn btn-primary btn-block">
+              Open Client Portal <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Portal 2: Staff Desk -->
+        <div class="card scroll-animate" style="border-top:4px solid var(--secondary);">
+          <div class="card-body" style="padding:2rem 1.5rem; text-align:center;">
+            <div style="width:64px; height:64px; border-radius:50%; background:var(--secondary-soft); color:var(--secondary); display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1.25rem;">
+              <i class="fas fa-user-tie"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:700; margin-bottom:8px;">2. Staff Service Desk</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Access your personal staff profile and assigned client to-do list with contact, timing, and purpose. Peer staff details are strictly masked for privacy.
+            </p>
+            <a href="staff-dashboard.html" class="btn btn-secondary btn-block">
+              Open Staff Desk <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Portal 3: Org Admin -->
+        <div class="card scroll-animate" style="border-top:4px solid var(--accent-peach);">
+          <div class="card-body" style="padding:2rem 1.5rem; text-align:center;">
+            <div style="width:64px; height:64px; border-radius:50%; background:var(--accent-peach-soft); color:var(--accent-peach-dark); display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1.25rem;">
+              <i class="fas fa-landmark"></i>
+            </div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:700; margin-bottom:8px;">3. Organization Admin</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem;">
+              Executive control: Review incoming client requests with 1-click Approve / Deny, view all client appointments, and toggle staff leave attendance.
+            </p>
+            <a href="admin-portal.html" class="btn btn-peach btn-block">
+              Open Org Admin <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: Multi-Sector Organization Directory (Approach Centers) -->
+  <section class="section" style="background:#F9FBFE; border-top:1px solid var(--border-light);">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <div class="section-pill"><i class="fas fa-city"></i> Multi-Sector Network</div>
+        <h2 class="section-title scroll-zoom-header">Approach Organizations <span>Across Sectors</span></h2>
+        <p class="section-subtitle">
+          Universities, Hospitals, Private Tech Campuses, and Public Sector Undertakings integrated into a single virtual pass ecosystem.
+        </p>
+      </div>
+
+      <div class="grid-4 scroll-animate" style="gap:1.5rem;">
+        
+        <!-- Sector 1 -->
+        <div class="card">
+          <div class="card-body" style="padding:1.5rem;">
+            <div style="font-size:2rem; color:var(--primary); margin-bottom:10px;"><i class="fas fa-university"></i></div>
+            <h4 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:6px;">Universities & Colleges</h4>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; margin-bottom:1rem;">
+              Admissions counseling, registrar verification, official transcripts, and fee clearances.
+            </p>
+            <span class="badge badge-blue">Apex National University</span>
+          </div>
+        </div>
+
+        <!-- Sector 2 -->
+        <div class="card">
+          <div class="card-body" style="padding:1.5rem;">
+            <div style="font-size:2rem; color:var(--accent-mint); margin-bottom:10px;"><i class="fas fa-hospital-alt"></i></div>
+            <h4 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:6px;">Hospitals & Healthcare</h4>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; margin-bottom:1rem;">
+              Doctor OPD consultation, specialist appointments, diagnostic labs, and 24x7 emergency triage.
+            </p>
+            <span class="badge badge-green">City Care Hospital</span>
+          </div>
+        </div>
+
+        <!-- Sector 3 -->
+        <div class="card">
+          <div class="card-body" style="padding:1.5rem;">
+            <div style="font-size:2rem; color:var(--secondary); margin-bottom:10px;"><i class="fas fa-laptop-code"></i></div>
+            <h4 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:6px;">Tech Enterprises</h4>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; margin-bottom:1rem;">
+              Candidate technical interview boards, vendor badging, cloud access desk, and hardware triage.
+            </p>
+            <span class="badge badge-purple">CloudScale Technologies</span>
+          </div>
+        </div>
+
+        <!-- Sector 4 -->
+        <div class="card">
+          <div class="card-body" style="padding:1.5rem;">
+            <div style="font-size:2rem; color:var(--accent-peach-dark); margin-bottom:10px;"><i class="fas fa-landmark"></i></div>
+            <h4 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:6px;">Public Sector (PSU / Govt)</h4>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5; margin-bottom:1rem;">
+              Citizen grievances redressal, biometrics enrollment, pension welfare, and statutory NOC certificates.
+            </p>
+            <span class="badge badge-peach">Bharat Public Authority</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: Citizen FAQs & Process Transparency Accordion -->
+  <section class="section" style="background:#FFFFFF; border-top:1px solid var(--border-light);">
+    <div class="container" style="max-width:900px;">
+      <div class="section-header scroll-animate">
+        <div class="section-pill"><i class="fas fa-question-circle"></i> Transparent Answers</div>
+        <h2 class="section-title scroll-zoom-header">Frequently Asked <span>Questions</span></h2>
+        <p class="section-subtitle">
+          Everything you need to know about how your visit pass works, privacy protection, and travel calculations.
+        </p>
+      </div>
+
+      <div class="scroll-animate">
+        
+        <div class="accordion-item active">
+          <div class="accordion-header" onclick="toggleFaq(this)">
+            <span>1. How does QueueLess calculate my travel time without tracking me?</span>
+            <i class="fas fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-body">
+            QueueLess uses a one-time mathematical distance calculation (Haversine formula) in your browser. It asks for your location once only to evaluate distance in kilometers and calculate transit minutes (Walk: 10–12m/km, 2-Wheeler: 1.5–2m/km, Car: 1.5–2m/km). Your GPS location is never logged, stored on any server, or shared.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleFaq(this)">
+            <span>2. What happens when I apply for an appointment pass?</span>
+            <i class="fas fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-body">
+            When you submit an appointment request, you instantly receive a digital visit pass with a verified QR code in <em>Pending Approval</em> status. The organization administrator or doctor reviews the request. If approved, it is pushed directly into the assigned staff's To-Do list. If declined, your screen immediately displays a clear cancellation alert with the doctor's reason.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleFaq(this)">
+            <span>3. How is staff personal privacy protected from other staff members?</span>
+            <i class="fas fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-body">
+            Under our strict Role-Based Access Control (RBAC), when a staff member logs in, they see their own full details (Staff ID, contact phone, residential address, department). For all colleagues, they only see Name and Designation. Sensitive phone numbers and home addresses of peers are strictly masked.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleFaq(this)">
+            <span>4. Can a client access internal staff or admin dashboards?</span>
+            <i class="fas fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-body">
+            No. When signed in as a Client, the navigation bar shows only client-relevant links. Furthermore, strict browser page guards automatically block clients from loading admin or staff portals, redirecting them safely back to their appointment portal.
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleFaq(this)">
+            <span>5. How can I run QueueLess on Windows, Android, Mac, or iOS?</span>
+            <i class="fas fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-body">
+            QueueLess provides standalone packages for every platform: <strong>Launch-QueueLess-Windows.bat</strong> on Windows, <strong>QueueLess.apk</strong> for Android, <strong>QueueLess.dmg</strong> for Mac, and <strong>QueueLess.ipa</strong> for iOS. The built-in Java server automatically broadcasts on your local Wi-Fi.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Dynamic Institutional Footer -->
+  <footer class="formal-footer" id="dynamicAppFooter"></footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    let activeTravelMode = 'WALK';
+
+    function setInteractiveTravelMode(mode) {
+      activeTravelMode = mode;
+      ['WALK', 'TWO_WHEELER', 'CAR', 'CYCLE', 'EBIKE'].forEach(m => {
+        const btn = document.getElementById(`modeBtn_${m}`);
+        if (btn) {
+          if (m === mode) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      const dist = document.getElementById('interactiveDistSlider').value;
+      updateInteractiveTravelCalculation(dist, mode);
+    }
+
+    function handleDistanceSliderChange(val) {
+      document.getElementById('interactiveDistDisplay').innerText = `${val} km`;
+      updateInteractiveTravelCalculation(val, activeTravelMode);
+    }
+
+    function updateInteractiveTravelCalculation(distanceKm, mode) {
+      const math = calculateTravelTimeForMode(distanceKm, mode);
+      document.getElementById('interactiveDurationResult').innerText = math.label;
+      document.getElementById('interactiveModeNameDisplay').innerText = math.modeName;
+      document.getElementById('interactiveDepartureResult').innerText = `${math.suggestedDeparture}`;
+
+      const distNum = Number(distanceKm);
+      const proxEl = document.getElementById('interactiveProximityResult');
+      if (distNum < 0.5) {
+        proxEl.innerText = 'Immediate / Arrived';
+        proxEl.style.color = 'var(--accent-mint)';
+      } else if (distNum < 2.0) {
+        proxEl.innerText = 'Nearby Walking Zone';
+        proxEl.style.color = 'var(--primary)';
+      } else {
+        proxEl.innerText = 'Transit Commute';
+        proxEl.style.color = 'var(--secondary)';
+      }
+    }
+
+    function handleDetectMyLocation() {
+      calculateAppointmentTravelTime((res) => {
+        if (res && res.distanceKm) {
+          document.getElementById('interactiveDistSlider').value = res.distanceKm;
+          handleDistanceSliderChange(res.distanceKm);
+          showToast(`Detected location: Approx. ${res.distanceKm} km from center.`, 'success');
+        }
+      });
+    }
+
+    function renderHeroCounters() {
+      const counters = getCounters();
+      const container = document.getElementById('heroCounterSlots');
+      if (!container) return;
+
+      container.innerHTML = counters.map(c => `
+        <div style="background:#FFFFFF; border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700; font-size:0.875rem; color:var(--text-primary);">${c.name}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${c.staff}</div>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge ${c.currentToken ? 'badge-peach' : 'badge-green'}" style="font-weight:800; font-size:0.8rem;">
+              ${c.currentToken ? c.currentToken : 'OPEN'}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFaq(header) {
+      const item = header.parentElement;
+      item.classList.toggle('active');
+    }
+
+    // Scroll-driven Text & Element Animation Observer
+    function initScrollAnimations() {
+      // Immediately mark elements in view or observe
+      document.querySelectorAll('.scroll-animate').forEach(el => {
+        el.classList.add('in-view');
+      });
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+            }
+          });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.scroll-animate').forEach(el => observer.observe(el));
+      }
+    }
+
+    // Dynamic Rotating Hero Animated Text
+    function initHeroAnimatedText() {
+      const words = [
+        'Zero Waiting Lines',
+        'Smart OPD Passes',
+        'AI Transit Dispatch',
+        'Real-Time Desk Calls',
+        'Direct Owner Pay Suite',
+        'Emergency Live Sync'
+      ];
+      let wordIdx = 0;
+      const el = document.getElementById('heroAnimatedWord');
+      if (!el) return;
+      setInterval(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(12px)';
+        setTimeout(() => {
+          wordIdx = (wordIdx + 1) % words.length;
+          el.textContent = words[wordIdx];
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, 280);
+      }, 2400);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initQueueStorage();
+      renderUniversalNavAuth();
+      renderHeroCounters();
+      updateInteractiveTravelCalculation(1.2, 'WALK');
+      renderDynamicFooter();
+      initScrollAnimations();
+      initHeroAnimatedText();
+
+      onQueueUpdate(() => {
+        renderUniversalNavAuth();
+        renderHeroCounters();
+        renderDynamicFooter();
+      });
+    });
+  </script>
+</body>
+</html>

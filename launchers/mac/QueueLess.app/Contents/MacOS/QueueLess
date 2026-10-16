@@ -1,0 +1,17 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+APP_DIR="$DIR/../Resources/www"
+TARGET="file://$APP_DIR/index.html"
+
+if [ -d "/Applications/Google Chrome.app" ]; then
+    open -a "Google Chrome" --args --app="$TARGET"
+    exit 0
+fi
+
+if [ -d "/Applications/Microsoft Edge.app" ]; then
+    open -a "Microsoft Edge" --args --app="$TARGET"
+    exit 0
+fi
+
+open "$TARGET"
+exit 0

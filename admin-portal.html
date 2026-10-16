@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organization Admin Command Portal — QueueLess</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .sector-tab-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+    .sector-tab-btn {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      box-shadow: var(--shadow-xs);
+    }
+    .sector-tab-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .sector-tab-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 4px 15px rgba(79, 143, 203, 0.2);
+    }
+    .approval-card {
+      background: #FFFFFF;
+      border: 1.5px solid #F5C6CB;
+      border-left: 5px solid var(--accent-peach);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .sector-tab-bar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 500px) {
+      .sector-tab-bar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-layer-group"></i></div>
+      <div>Queue<span>Less</span></div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="mobile-app.html" class="nav-link"><i class="fas fa-mobile-alt"></i> Client Portal</a>
+      <a href="staff-dashboard.html" class="nav-link"><i class="fas fa-user-tie"></i> Staff Desk</a>
+      <a href="admin-portal.html" class="nav-link active"><i class="fas fa-landmark"></i> Org Admin</a>
+      <a href="database-live-view.html" class="nav-link"><i class="fas fa-database"></i> Live Database</a>
+      <a href="kiosk-display.html" class="nav-link"><i class="fas fa-tv"></i> Waiting Display</a>
+    </nav>
+
+    <div class="nav-actions">
+      <span id="globalOrgSectorBadge" class="badge badge-peach" style="font-size:0.75rem;"></span>
+      <div id="navAuthProfileSlot" style="display:inline-flex; align-items:center;"></div>
+    </div>
+  </header>
+
+  <main class="section" style="padding: 2.25rem 0;">
+    <div class="container">
+
+      <!-- Admin Header Banner -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div class="section-pill"><i class="fas fa-shield-alt"></i> Organization Administration & Approvals</div>
+          <h1 style="font-family:'Poppins',sans-serif; font-size:1.85rem; font-weight:800; color:var(--text-primary); margin-bottom:4px;" id="adminOrgTitle">
+            Apex National University — Executive Command Portal
+          </h1>
+          <p style="font-size:0.875rem; color:var(--text-secondary);">
+            Approve client appointments, inspect all client details, manage staff directory and toggle on-duty / on-leave attendance.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <a href="kiosk-display.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-tv"></i> Public Waiting Display
+          </a>
+          <a href="database-live-view.html" class="btn btn-primary btn-sm">
+            <i class="fas fa-database"></i> Live Database View
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 1: Incoming Client Requests Approval Desk (Doctor / Admin Approval Gate) -->
+      <div class="card" style="margin-bottom:2rem; border-color:#F5C6CB;">
+        <div class="card-header" style="background:#FFF9F9;">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:800; color:var(--accent-peach-dark);">
+              <i class="fas fa-inbox" style="color:var(--accent-peach); margin-right:6px;"></i> Incoming Client Requests (Approval Desk)
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">
+              When a client applies, the request awaits organization approval. If approved &rarr; added to Staff To-Do list. If denied &rarr; client receives cancellation alert.
+            </span>
+          </div>
+          <span class="badge badge-peach" id="pendingApprovalCountBadge">0 Pending Requests</span>
+        </div>
+
+        <div class="card-body" id="pendingApprovalsContainer" style="padding:1.25rem;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Sector Field Switcher Bar -->
+      <div style="margin-bottom:0.75rem; font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+        <i class="fas fa-exchange-alt"></i> Switch Organization Operating Field:
+      </div>
+      <div class="sector-tab-bar">
+        <div class="sector-tab-btn active" id="sectorBtn_UNIVERSITY" onclick="handleSwitchSector('UNIVERSITY')">
+          <div style="font-size:1.2rem; color:var(--primary); margin-bottom:4px;"><i class="fas fa-university"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">University & Higher Ed</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Admissions, Exams, Transcripts</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_PVT_LTD" onclick="handleSwitchSector('PVT_LTD')">
+          <div style="font-size:1.2rem; color:var(--secondary); margin-bottom:4px;"><i class="fas fa-building"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">Private Limited / Corp</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Candidate Interviews, HR, Billing</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_PSU" onclick="handleSwitchSector('PSU')">
+          <div style="font-size:1.2rem; color:var(--accent-mint); margin-bottom:4px;"><i class="fas fa-landmark"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">PSU & Citizen Services</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Grievances, Biometrics, Welfare</div>
+        </div>
+
+        <div class="sector-tab-btn" id="sectorBtn_TECH_CORP" onclick="handleSwitchSector('TECH_CORP')">
+          <div style="font-size:1.2rem; color:var(--accent-peach); margin-bottom:4px;"><i class="fas fa-microchip"></i></div>
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">Tech Enterprise / IT Hub</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Hardware Triage, Cloud Access</div>
+        </div>
+      </div>
+
+      <!-- Section 2: All Clients Master To-Do & Appointment List (Admin Complete Oversight) -->
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-header">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; color:var(--text-primary);">
+              <i class="fas fa-list-alt" style="color:var(--primary); margin-right:6px;"></i> All Client Appointments & To-Do List
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">
+              Admin View: Full client profile with contact, live location, appointment timing, purpose, and assigned desk
+            </span>
+          </div>
+          <span class="badge badge-blue" id="allClientsCountBadge">14 Total Records</span>
+        </div>
+
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              <thead>
+                <tr style="background:var(--bg-sidebar); border-bottom:1px solid var(--border); color:var(--text-muted); font-size:0.75rem;">
+                  <th style="padding:10px 14px;">Turn Pass #</th>
+                  <th style="padding:10px 14px;">Client Name & Phone</th>
+                  <th style="padding:10px 14px;">Client Live Location</th>
+                  <th style="padding:10px 14px;">Purpose / Perspective</th>
+                  <th style="padding:10px 14px;">Appointment Timing</th>
+                  <th style="padding:10px 14px;">Assigned Desk</th>
+                  <th style="padding:10px 14px;">Current Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminAllClientsTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Staff Members Personal Registry & Attendance/Leave Management -->
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-header">
+          <div>
+            <h3 style="font-family:'Poppins',sans-serif; font-size:1.15rem; font-weight:700; color:var(--text-primary);">
+              <i class="fas fa-user-shield" style="color:var(--secondary); margin-right:6px;"></i> Staff Personal Registry & Attendance Management
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">
+              Admin View: Full personal data of staff (Contact, Residential Address, ID) with 1-click Leave / No Leave toggle
+            </span>
+          </div>
+          <span class="badge badge-purple">Staff Attendance Control</span>
+        </div>
+
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+              <thead>
+                <tr style="background:var(--bg-sidebar); border-bottom:1px solid var(--border); color:var(--text-muted); font-size:0.75rem;">
+                  <th style="padding:10px 16px;">Staff ID & Name</th>
+                  <th style="padding:10px 16px;">Designation & Department</th>
+                  <th style="padding:10px 16px;">Contact Phone</th>
+                  <th style="padding:10px 16px;">Personal Residential Address</th>
+                  <th style="padding:10px 16px;">Assigned Desk</th>
+                  <th style="padding:10px 16px;">Leave Status</th>
+                  <th style="padding:10px 16px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminStaffTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Dynamic Institutional Footer -->
+  <footer class="formal-footer" id="dynamicAppFooter"></footer>
+
+  <script src="assets/js/engine.js"></script>
+  <script>
+    function renderAdminHeader() {
+      const sector = getActiveSector();
+      document.getElementById('adminOrgTitle').innerText = `${sector.badge} — Executive Command Portal`;
+
+      ['UNIVERSITY', 'PVT_LTD', 'PSU', 'TECH_CORP'].forEach(key => {
+        const btn = document.getElementById(`sectorBtn_${key}`);
+        if (btn) {
+          if (key === sector.id) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+    }
+
+    function handleSwitchSector(key) {
+      setOrganizationSector(key, true);
+    }
+
+    // 1. Render Incoming Client Requests (Awaiting Admin Approval)
+    function renderPendingApprovals() {
+      const tokens = getTokens();
+      const pending = tokens.filter(t => t.status === 'PENDING_APPROVAL');
+      document.getElementById('pendingApprovalCountBadge').innerText = `${pending.length} Pending Approval`;
+
+      const container = document.getElementById('pendingApprovalsContainer');
+      if (!container) return;
+
+      if (pending.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:1.5rem; color:var(--text-muted);">
+            <i class="fas fa-check-circle" style="color:var(--accent-mint); font-size:1.75rem; margin-bottom:6px; display:block;"></i>
+            All appointment requests are approved! No pending requests awaiting review.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = pending.map(req => `
+        <div class="approval-card">
+          <div style="flex:1; min-width:280px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span class="badge ${req.isEmergency ? 'badge-peach' : 'badge-blue'}">
+                ${req.tokenNumber} ${req.isEmergency ? '• EMERGENCY' : '• APPOINTMENT'}
+              </span>
+              <strong style="font-size:1.05rem; color:var(--text-primary);">${req.userName}</strong>
+              <span style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-phone-alt"></i> ${req.userPhone}</span>
+            </div>
+            <div style="font-size:0.825rem; color:var(--text-secondary); margin-bottom:4px;">
+              <strong>Purpose:</strong> ${req.perspective} • <strong>Requested Service:</strong> ${req.serviceName}
+            </div>
+            <div style="font-size:0.775rem; color:var(--text-muted);">
+              <i class="fas fa-map-marker-alt" style="color:var(--accent-peach);"></i> <strong>Client Live Location:</strong> ${req.userLocation} • Submitted: ${req.checkInTime}
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn btn-mint btn-sm" onclick="handleApproveRequest(${req.id})" style="padding:6px 14px;">
+              <i class="fas fa-check"></i> Approve & Send to Staff Desk
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="handleDenyRequest(${req.id})" style="padding:6px 14px; border-color:#E36D61; color:#E36D61; background:#FFF5F5;">
+              <i class="fas fa-times"></i> Deny & Cancel
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleApproveRequest(id) {
+      const res = approveAppointment(id, 1);
+      if (res.success) {
+        showToast(`Approved appointment for ${res.token.userName}! Added to Staff To-Do list.`, 'success');
+        renderPendingApprovals();
+        renderAdminAllClients();
+      }
+    }
+
+    function handleDenyRequest(id) {
+      const reason = prompt('Please enter the reason for declining this appointment (Client will see this alert):', 'Slot full / Doctor unavailable today');
+      if (reason === null) return; // User cancelled prompt
+
+      const res = denyAppointment(id, reason || 'Capacity reached');
+      if (res.success) {
+        showToast(`Appointment declined. Cancellation alert sent to client.`, 'warning');
+        renderPendingApprovals();
+        renderAdminAllClients();
+      }
+    }
+
+    // 2. Render All Clients Master To-Do & Appointment List
+    function renderAdminAllClients() {
+      const clients = getAdminClientTodoList();
+      document.getElementById('allClientsCountBadge').innerText = `${clients.length} Total Records`;
+
+      const tbody = document.getElementById('adminAllClientsTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = clients.map(c => `
+        <tr style="border-bottom:1px solid var(--border-light); ${c.isEmergency ? 'background:#FFF5F5;' : ''}">
+          <td style="padding:10px 14px; font-weight:800; font-family:'Poppins',sans-serif; color:var(--primary-dark);">
+            ${c.tokenNumber}
+            ${c.isEmergency ? '<span class="badge badge-peach" style="font-size:0.65rem; display:block; width:fit-content; margin-top:2px;">EMERGENCY</span>' : ''}
+          </td>
+          <td style="padding:10px 14px;">
+            <div style="font-weight:700; color:var(--text-primary);">${c.userName}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-phone-alt" style="font-size:0.65rem;"></i> ${c.userPhone}</div>
+          </td>
+          <td style="padding:10px 14px; font-size:0.8rem; color:var(--text-secondary);">
+            <i class="fas fa-map-marker-alt" style="color:var(--accent-peach);"></i> ${c.userLocation}
+          </td>
+          <td style="padding:10px 14px; font-size:0.825rem; font-weight:600; color:var(--text-primary);">
+            ${c.perspective}
+          </td>
+          <td style="padding:10px 14px; font-size:0.8rem; font-weight:700; color:var(--accent-mint);">
+            <i class="fas fa-clock"></i> ${c.timing}
+          </td>
+          <td style="padding:10px 14px; font-size:0.8rem; color:var(--secondary); font-weight:600;">
+            ${c.counterName}
+          </td>
+          <td style="padding:10px 14px;">
+            <span class="badge ${c.status === 'COMPLETED' ? 'badge-green' : c.status === 'IN_SERVICE' ? 'badge-blue' : c.status === 'PENDING_APPROVAL' ? 'badge-peach' : c.status === 'CANCELLED_BY_ORG' ? 'badge-peach' : 'badge-purple'}">
+              ${c.status === 'CANCELLED_BY_ORG' ? 'DECLINED' : c.status}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 3. Render Staff Members Personal Registry & Attendance
+    function renderAdminStaffRegistry() {
+      const staffList = getAdminStaffRegistry();
+      const tbody = document.getElementById('adminStaffTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = staffList.map(s => `
+        <tr style="border-bottom:1px solid var(--border-light);">
+          <td style="padding:12px 16px;">
+            <div style="font-weight:800; color:var(--primary-dark); font-size:0.9rem;">
+              <i class="fas fa-id-badge" style="color:var(--primary);"></i> ${s.staffId || 'STF-001'}
+            </div>
+            <div style="font-weight:700; color:var(--text-primary); font-size:0.95rem;">${s.name}</div>
+          </td>
+          <td style="padding:12px 16px;">
+            <div style="font-weight:600; color:var(--secondary); font-size:0.85rem;">${s.designation}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${s.department}</div>
+          </td>
+          <td style="padding:12px 16px; font-size:0.85rem; font-weight:600; color:var(--text-primary);">
+            <i class="fas fa-phone-alt" style="color:var(--accent-mint); font-size:0.75rem;"></i> ${s.phone}
+          </td>
+          <td style="padding:12px 16px; font-size:0.8rem; color:var(--text-secondary); max-width:260px;">
+            <i class="fas fa-home" style="color:var(--text-muted);"></i> ${s.personalAddress}
+          </td>
+          <td style="padding:12px 16px; font-size:0.825rem; font-weight:600; color:var(--primary);">
+            ${s.counterName || 'Service Desk'}
+          </td>
+          <td style="padding:12px 16px;">
+            <span class="badge ${s.leaveStatus === 'ON_LEAVE' ? 'badge-peach' : 'badge-mint'}">
+              <i class="fas ${s.leaveStatus === 'ON_LEAVE' ? 'fa-plane-departure' : 'fa-check-circle'}"></i> ${s.leaveStatus === 'ON_LEAVE' ? 'On Leave' : 'On Duty'}
+            </span>
+          </td>
+          <td style="padding:12px 16px;">
+            <button class="btn btn-secondary btn-sm" onclick="handleToggleLeave('${s.id}')" style="padding:5px 10px; font-size:0.75rem;">
+              <i class="fas fa-toggle-on"></i> Toggle Leave
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function handleToggleLeave(staffId) {
+      const res = toggleStaffLeave(staffId);
+      if (res.success) {
+        showToast(`${res.staff.name} is now ${res.staff.leaveStatus === 'ON_DUTY' ? 'ON DUTY' : 'ON LEAVE'}.`, 'info');
+        renderAdminStaffRegistry();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUniversalNavAuth();
+      renderAdminHeader();
+      renderPendingApprovals();
+      renderAdminAllClients();
+      renderAdminStaffRegistry();
+      renderDynamicFooter();
+
+      onQueueUpdate(() => {
+        renderUniversalNavAuth();
+        renderAdminHeader();
+        renderPendingApprovals();
+        renderAdminAllClients();
+        renderAdminStaffRegistry();
+        renderDynamicFooter();
+      });
+    });
+  </script>
+</body>
+</html>
